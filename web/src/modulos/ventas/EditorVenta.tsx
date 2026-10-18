@@ -1,11 +1,13 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Plus, Save, Search, Trash2, X } from 'lucide-react'
+import { Grid3x3, Plus, Save, Search, Trash2, X } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { api } from '../../api/cliente'
 import { Permisos } from '../../auth/permisos'
 import { useSesion } from '../../auth/SesionContexto'
 import { Aviso, Boton, Casilla, Modal, Selector } from '../../ui/componentes'
 import type { Cliente } from '../clientes/ClientesPage'
+import { esTactil, useModoTeclado } from './modoTeclado'
+import { TecladoCodigo } from './TecladoCodigo'
 import {
   borrador,
   calcularTotales,
@@ -56,6 +58,8 @@ export function EditorVenta({
   const [error, setError] = useState<string | null>(null)
   const [autoguardado, setAutoguardado] = useState<EstadoAutoguardado>('quieto')
   const refCodigo = useRef<HTMLInputElement>(null)
+  const teclado = useModoTeclado()
+  const [tecladoAbierto, setTecladoAbierto] = useState(false)
   const refRenglones = useRef<HTMLDivElement>(null)
   const refId = useRef(idInicial)
   const ultimoGuardado = useRef<string | null>(idInicial ? JSON.stringify(cuerpoVenta(inicial)) : null)
@@ -68,7 +72,8 @@ export function EditorVenta({
 
   useEffect(() => {
     activo.current = true
-    refCodigo.current?.focus()
+    // En celular no se enfoca solo: abriría el teclado y taparía la venta.
+    if (!esTactil()) refCodigo.current?.focus()
     return () => {
       activo.current = false
     }
@@ -302,10 +307,27 @@ export function EditorVenta({
                 void agregarPorCodigo()
               }
             }}
+            onFocus={() => teclado.propio && setTecladoAbierto(true)}
+            onClick={() => teclado.propio && setTecladoAbierto(true)}
+            onBlur={() => setTecladoAbierto(false)}
             placeholder={agregando ? 'Buscando producto…' : 'Escaneá o escribí el código y Enter (0 para buscar)'}
             aria-label="Código de producto"
-            inputMode="search"
+            inputMode={teclado.propio ? 'none' : teclado.tactil ? 'text' : 'numeric'}
+            enterKeyHint="enter"
+            autoComplete="off"
           />
+          {teclado.tactil && !teclado.propio && (
+            <Boton
+              onClick={() => {
+                teclado.cambiar('propio')
+                window.requestAnimationFrame(() => refCodigo.current?.focus())
+              }}
+              aria-label="Usar el teclado numérico"
+              title="Usar el teclado numérico"
+            >
+              <Grid3x3 size={16} />
+            </Boton>
+          )}
           <Boton onClick={() => void agregarPorCodigo()} aria-label="Agregar producto" title="Agregar producto">
             <Plus size={16} />
           </Boton>
@@ -313,6 +335,22 @@ export function EditorVenta({
             <Search size={16} />
           </Boton>
         </div>
+        {teclado.propio && tecladoAbierto && (
+          <TecladoCodigo
+            refCampo={refCodigo}
+            valor={codigo}
+            alCambiar={setCodigo}
+            alAgregar={() => void agregarPorCodigo()}
+            alUsarSistema={() => {
+              teclado.cambiar('sistema')
+              const campo = refCodigo.current
+              campo?.blur()
+              window.requestAnimationFrame(() => campo?.focus())
+            }}
+            alOcultar={() => refCodigo.current?.blur()}
+            deshabilitado={agregando}
+          />
+        )}
         {avisoProducto && <div className="editor-venta__aviso-producto">{avisoProducto}</div>}
         <div className="editor-venta__acciones">
           <span className={`editor-venta__autoguardado${autoguardado === 'error' ? ' editor-venta__autoguardado--error' : ''}`}>

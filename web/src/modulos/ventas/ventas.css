@@ -46,6 +46,17 @@
 .editor-venta__autoguardado { font-size: 13px; color: var(--color-texto-suave); margin-right: 6px; }
 .editor-venta__autoguardado--error { color: var(--color-peligro); }
 
+/* Teclado numérico propio del campo de código (solo en pantallas táctiles). */
+.teclado-codigo { grid-column: 1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: 52px; gap: 6px; padding: 8px; border: 1px solid var(--color-borde); border-radius: 12px; background: #eef2f3; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+.teclado-codigo__tecla { display: flex; align-items: center; justify-content: center; border: 1px solid var(--color-borde); border-radius: 10px; background: #fff; color: var(--color-texto); font: inherit; font-size: 24px; font-weight: 600; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.teclado-codigo__tecla:active { background: #dfe7e9; }
+.teclado-codigo__tecla:disabled { opacity: 0.55; }
+.teclado-codigo__borrar, .teclado-codigo__ocultar { background: #f6f8f8; }
+.teclado-codigo__abc { background: #f6f8f8; font-size: 15px; font-weight: 700; color: var(--color-texto-suave); }
+.teclado-codigo__agregar { grid-row: span 2; background: var(--color-marca); border-color: var(--color-marca); color: #fff; }
+.teclado-codigo__agregar:active { background: var(--color-marca-oscuro); }
+.teclado-codigo__cero { grid-column: span 2; }
+
 .tabla-renglones thead th { position: sticky; top: 0; z-index: 1; }
 .tabla-renglones td { padding-top: 6px; padding-bottom: 6px; }
 .tabla-renglones__producto { width: 100%; }
@@ -137,8 +148,8 @@
   .tabla-ventas td.acciones .boton + .boton { margin-left: 0; }
   .tabla-ventas__anulada { opacity: 0.7; }
 
-  .editor-venta { gap: 8px; }
-  .editor-venta__cuerpo { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr) auto; gap: 8px; }
+  .editor-venta { gap: 8px; overflow-y: auto; }
+  .editor-venta__cuerpo { flex: 1 0 auto; grid-template-columns: 1fr; grid-template-rows: minmax(160px, 1fr) auto; gap: 8px; }
   .editor-venta__resumen { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 4px 14px; padding: 8px 12px; }
   .resumen-venta__conteo { display: flex; gap: 14px; }
   .resumen-venta__conteo div { padding: 0; border: 0; background: none; }
