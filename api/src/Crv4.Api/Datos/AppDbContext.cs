@@ -3,6 +3,7 @@ using Crv4.Api.Modulos.Productos;
 using Crv4.Api.Modulos.Rubros;
 using Crv4.Api.Modulos.Seguridad;
 using Crv4.Api.Modulos.Sistema;
+using Crv4.Api.Modulos.Ventas;
 using Microsoft.EntityFrameworkCore;
 
 namespace Crv4.Api.Datos;
@@ -25,6 +26,13 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Cliente> Clientes => Set<Cliente>();
     public DbSet<Zona> Zonas => Set<Zona>();
     public DbSet<CondicionFiscal> CondicionesFiscales => Set<CondicionFiscal>();
+    public DbSet<Factura> Facturas => Set<Factura>();
+    public DbSet<FacturaDetalle> FacturasDetalles => Set<FacturaDetalle>();
+    public DbSet<EstadoVenta> EstadosVenta => Set<EstadoVenta>();
+    public DbSet<Vendedor> Vendedores => Set<Vendedor>();
+    public DbSet<MedioPago> MediosPago => Set<MedioPago>();
+    public DbSet<CuentaCobro> CuentasCobro => Set<CuentaCobro>();
+    public DbSet<Pago> Pagos => Set<Pago>();
     public DbSet<Numerador> Numeradores => Set<Numerador>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

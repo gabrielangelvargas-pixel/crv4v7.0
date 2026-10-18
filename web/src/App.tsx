@@ -14,6 +14,7 @@ const ClientesPage = lazy(() => import('./modulos/clientes/ClientesPage').then((
 const ProductosPage = lazy(() => import('./modulos/productos/ProductosPage').then((m) => ({ default: m.ProductosPage })))
 const RubrosPage = lazy(() => import('./modulos/rubros/RubrosPage').then((m) => ({ default: m.RubrosPage })))
 const SeguridadPage = lazy(() => import('./modulos/seguridad/SeguridadPage').then((m) => ({ default: m.SeguridadPage })))
+const VentasPage = lazy(() => import('./modulos/ventas/VentasPage').then((m) => ({ default: m.VentasPage })))
 
 export function App() {
   const { usuario, cargando } = useSesion()
@@ -30,7 +31,7 @@ export function App() {
             <Route index element={<InicioPage />} />
             <Route path="productos" element={<ConPermiso permisos={[Permisos.ProductosVer]}><ProductosPage /></ConPermiso>} />
             <Route path="clientes" element={<ConPermiso permisos={[Permisos.ClientesVer]}><ClientesPage /></ConPermiso>} />
-            <Route path="ventas" element={<ConPermiso permisos={[Permisos.VentasVer]}><EnConstruccion titulo="Ventas" /></ConPermiso>} />
+            <Route path="ventas" element={<ConPermiso permisos={[Permisos.VentasVer]}><VentasPage /></ConPermiso>} />
             <Route path="estadisticas" element={<ConPermiso permisos={[Permisos.ReportesVer]}><EnConstruccion titulo="Estadísticas" /></ConPermiso>} />
             <Route path="control-ventas" element={<ConPermiso permisos={[Permisos.ReportesVer]}><EnConstruccion titulo="Control Ventas" /></ConPermiso>} />
             <Route path="rubros" element={<ConPermiso permisos={[Permisos.RubrosVer]}><RubrosPage /></ConPermiso>} />

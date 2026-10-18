@@ -1,6 +1,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Pencil, Plus, SlidersHorizontal, Trash2 } from 'lucide-react'
+import { Pencil, Plus, ShoppingCart, SlidersHorizontal, Trash2 } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
+import { useNavigate } from 'react-router'
 import { api } from '../../api/cliente'
 import { Permisos } from '../../auth/permisos'
 import { useSesion } from '../../auth/SesionContexto'
@@ -71,6 +72,8 @@ export function ClientesPage() {
   const { tiene } = useSesion()
   const puedeCrear = tiene(Permisos.ClientesCrear)
   const puedeEditar = tiene(Permisos.ClientesEditar)
+  const verVentas = tiene(Permisos.VentasVer)
+  const navegar = useNavigate()
   const [buscar, setBuscar] = useState('')
   const [texto, setTexto] = useState('')
   const [idZona, setIdZona] = useState('')
@@ -185,7 +188,7 @@ export function ClientesPage() {
                 <th>Condición fiscal</th>
                 <th>Teléfono</th>
                 <th className="numero">Saldo</th>
-                {puedeEditar && <th />}
+                {(puedeEditar || verVentas) && <th />}
               </tr>
             </thead>
             <tbody>
@@ -210,16 +213,28 @@ export function ClientesPage() {
                     <td className={`numero tabla-clientes__saldo${c.saldoCuenta > 0 ? ' tabla-clientes__saldo--debe' : ''}`}>
                       {moneda.format(c.saldoCuenta)}
                     </td>
-                    {puedeEditar && (
+                    {(puedeEditar || verVentas) && (
                       <td className="acciones">
-                        <Boton
-                          chico
-                          onClick={() => setEdicion({ modo: 'editar', id: c.id })}
-                          aria-label={`Editar ${c.nombre}`}
-                          title="Editar"
-                        >
-                          <Pencil size={14} /> <span className="solo-ancho">Editar</span>
-                        </Boton>
+                        {verVentas && (
+                          <Boton
+                            chico
+                            onClick={() => navegar(`/ventas?cliente=${c.id}`)}
+                            aria-label={`Ver las ventas de ${c.nombre}`}
+                            title="Ver ventas"
+                          >
+                            <ShoppingCart size={14} />
+                          </Boton>
+                        )}
+                        {puedeEditar && (
+                          <Boton
+                            chico
+                            onClick={() => setEdicion({ modo: 'editar', id: c.id })}
+                            aria-label={`Editar ${c.nombre}`}
+                            title="Editar"
+                          >
+                            <Pencil size={14} /> <span className="solo-ancho">Editar</span>
+                          </Boton>
+                        )}
                       </td>
                     )}
                   </tr>
