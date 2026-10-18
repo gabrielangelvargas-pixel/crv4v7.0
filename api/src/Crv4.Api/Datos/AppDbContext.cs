@@ -21,6 +21,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Sesion> Sesiones => Set<Sesion>();
     public DbSet<Rubro> Rubros => Set<Rubro>();
     public DbSet<Producto> Productos => Set<Producto>();
+    public DbSet<Proveedor> Proveedores => Set<Proveedor>();
     public DbSet<Cliente> Clientes => Set<Cliente>();
     public DbSet<Numerador> Numeradores => Set<Numerador>();
 

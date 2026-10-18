@@ -93,7 +93,20 @@ export function Tarjeta({
 }
 
 /** Modal accesible basado en <dialog>. */
-export function Modal({ titulo, abierto, alCerrar, children }: { titulo: string; abierto: boolean; alCerrar: () => void; children: ReactNode }) {
+export function Modal({
+  titulo,
+  abierto,
+  alCerrar,
+  grande,
+  children,
+}: {
+  titulo: string
+  abierto: boolean
+  alCerrar: () => void
+  /** Para formularios con muchos campos. */
+  grande?: boolean
+  children: ReactNode
+}) {
   const ref = useRef<HTMLDialogElement>(null)
   useEffect(() => {
     const dialogo = ref.current
@@ -103,7 +116,7 @@ export function Modal({ titulo, abierto, alCerrar, children }: { titulo: string;
   }, [abierto])
 
   return (
-    <dialog ref={ref} className="modal" onClose={alCerrar} onCancel={alCerrar}>
+    <dialog ref={ref} className={grande ? 'modal modal--grande' : 'modal'} onClose={alCerrar} onCancel={alCerrar}>
       <div className="modal__encabezado">
         <h2 className="modal__titulo">{titulo}</h2>
         <Boton className="boton--icono" aria-label="Cerrar" onClick={alCerrar}>

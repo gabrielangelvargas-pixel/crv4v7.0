@@ -30,6 +30,19 @@ public class ProductoConfiguracion : IEntityTypeConfiguration<Producto>
         b.Property(x => x.PrecioCosto).HasComputedColumnSql("`precioCompra` * (1 - (`Descuento` / 100))", stored: true);
         b.Property(x => x.Utilidad).HasPrecision(10, 3);
         b.Property(x => x.FechaAlta).HasDefaultValueSql("CURRENT_TIMESTAMP").ValueGeneratedOnAdd();
+        b.HasOne(x => x.Rubro).WithMany().HasForeignKey(x => x.IdRubro).HasPrincipalKey(r => r.Codigo).OnDelete(DeleteBehavior.Restrict);
+        b.HasOne(x => x.Proveedor).WithMany().HasForeignKey(x => x.IdProveedor).OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
+public class ProveedorConfiguracion : IEntityTypeConfiguration<Proveedor>
+{
+    public void Configure(EntityTypeBuilder<Proveedor> b)
+    {
+        b.ToTable("proveedores", t => t.ExcludeFromMigrations());
+        b.HasKey(x => x.Codigo);
+        b.Property(x => x.Codigo).HasColumnName("IdProveedor").HasMaxLength(2);
+        b.Property(x => x.Nombre).HasColumnName("NombreProveedor").HasMaxLength(45);
     }
 }
 

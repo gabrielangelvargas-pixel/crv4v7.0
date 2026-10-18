@@ -83,6 +83,7 @@
 
 /* ---------- Modal ---------- */
 .modal { border: none; padding: 0; border-radius: 12px; width: min(520px, calc(100vw - 32px)); box-shadow: var(--sombra-alta); }
+.modal--grande { width: min(860px, calc(100vw - 32px)); }
 .modal::backdrop { background: rgb(15 23 30 / 45%); }
 .modal__encabezado { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px; border-bottom: 1px solid var(--color-borde); }
 .modal__titulo { font-size: 18px; }
@@ -94,3 +95,6 @@
 .pestanas { display: flex; gap: 4px; border-bottom: 1px solid var(--color-borde); margin-bottom: 16px; }
 .pestana { padding: 10px 14px; border: none; background: none; font-weight: 600; color: var(--color-texto-suave); cursor: pointer; border-bottom: 2px solid transparent; }
 .pestana[aria-selected='true'] { color: var(--color-marca); border-bottom-color: var(--color-marca); }
+
+/* Texto que se oculta en pantallas chicas (por ejemplo, la etiqueta de un botón con ícono). */
+@media (max-width: 640px) { .solo-ancho { display: none; } }

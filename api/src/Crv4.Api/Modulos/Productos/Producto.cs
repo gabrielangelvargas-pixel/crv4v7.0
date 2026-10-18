@@ -21,4 +21,6 @@ public class Producto
     public DateTime FechaAlta { get; set; }
     public bool Activo { get; set; } = true;
     public string? ImagenPrincipal { get; set; }
+    public Rubros.Rubro? Rubro { get; set; }
+    public Proveedor? Proveedor { get; set; }
 }
