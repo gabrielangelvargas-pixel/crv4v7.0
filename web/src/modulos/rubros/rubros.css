@@ -1,0 +1,51 @@
+/* Lista de rubros en acordeón: cada padre se despliega para mostrar sus hijos y nietos. */
+.acordeon { border: 1px solid var(--color-borde); border-radius: var(--radio); overflow: hidden; }
+.acordeon__item--raiz + .acordeon__item--raiz { border-top: 1px solid var(--color-borde); }
+.acordeon__panel { background: #f8fafa; border-top: 1px solid var(--color-borde); }
+.acordeon__panel .acordeon__item + .acordeon__item { border-top: 1px dashed var(--color-borde); }
+.acordeon__panel .acordeon__panel { background: #f1f4f5; }
+
+.acordeon__fila {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px 6px calc(4px + var(--nivel, 0) * 24px);
+}
+.acordeon__fila:hover { background: rgb(0 0 0 / 2%); }
+
+.acordeon__boton {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 4px;
+  border: none;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  border-radius: var(--radio);
+}
+.acordeon__boton:not([aria-expanded]) { cursor: default; }
+.acordeon__boton:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--color-marca-suave); }
+
+.acordeon__flecha { flex: none; width: 22px; display: grid; place-items: center; align-self: flex-start; margin-top: 1px; color: var(--color-texto-suave); transition: transform 0.15s; }
+.acordeon__flecha--abierta { transform: rotate(90deg); color: var(--color-marca); }
+
+.acordeon__texto { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.acordeon__titulo { font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+.acordeon__item--raiz > .acordeon__fila .acordeon__titulo { font-weight: 700; }
+.acordeon__codigo { display: inline-block; min-width: 44px; margin-right: 6px; font-weight: 600; color: var(--color-texto-suave); font-variant-numeric: tabular-nums; }
+.acordeon__datos { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; font-size: 13px; color: var(--color-texto-suave); }
+
+.acordeon__acciones { flex: none; display: flex; gap: 6px; }
+
+@media (max-width: 640px) {
+  .acordeon__fila { padding: 4px 8px 4px calc(2px + var(--nivel, 0) * 14px); align-items: flex-start; }
+  .acordeon__boton { padding: 8px 2px; }
+  .acordeon__acciones { padding-top: 6px; }
+  .acordeon__acciones .boton { width: 36px; padding: 0; }
+  .solo-ancho { display: none; }
+}

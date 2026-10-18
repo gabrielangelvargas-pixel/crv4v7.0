@@ -1,9 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Pencil, Plus, Trash2 } from 'lucide-react'
-import { useState, type FormEvent } from 'react'
+import { ChevronRight, ChevronsDownUp, ChevronsUpDown, Pencil, Plus, Trash2 } from 'lucide-react'
+import { useState, type CSSProperties, type FormEvent } from 'react'
 import { api } from '../../api/cliente'
 import { Permisos } from '../../auth/permisos'
 import { useSesion } from '../../auth/SesionContexto'
+import './rubros.css'
 import { Aviso, Boton, Campo, Casilla, EstadoActivo, Modal, Selector, Tarjeta } from '../../ui/componentes'
 
 export interface Rubro {
@@ -42,9 +43,21 @@ export function RubrosPage() {
     },
   })
   const filtro = buscar.trim().toLowerCase()
-  const arbol = ordenarPorJerarquia(rubros.data ?? [])
-  const lista = arbol.filter(({ rubro: r }) => !filtro || r.nombre.toLowerCase().includes(filtro) || r.codigo.toLowerCase().includes(filtro))
-  const conAcciones = puedeEditar || puedeEliminar
+  const arbol = filtrarArbol(armarArbol(rubros.data ?? []), filtro)
+  const [abiertos, setAbiertos] = useState<Set<number>>(new Set())
+  const conHijos = (rubros.data ?? []).filter((r) => (rubros.data ?? []).some((h) => h.idPadre === r.id)).map((r) => r.id)
+  const alternar = (id: number) =>
+    setAbiertos((actual) => {
+      const nuevos = new Set(actual)
+      if (!nuevos.delete(id)) nuevos.add(id)
+      return nuevos
+    })
+  const acciones: Acciones = {
+    abierto: (id) => !!filtro || abiertos.has(id),
+    alternar,
+    editar: puedeEditar ? setEditando : undefined,
+    eliminar: puedeEliminar ? setEliminando : undefined,
+  }
 
   return (
     <>
@@ -58,6 +71,12 @@ export function RubrosPage() {
             value={buscar}
             onChange={(e) => setBuscar(e.target.value)}
           />
+          {!filtro && conHijos.length > 0 && (
+            <Boton onClick={() => setAbiertos(abiertos.size ? new Set() : new Set(conHijos))}>
+              {abiertos.size ? <ChevronsDownUp size={16} /> : <ChevronsUpDown size={16} />}
+              {abiertos.size ? 'Contraer todo' : 'Expandir todo'}
+            </Boton>
+          )}
           {puedeCrear && (
             <Boton variante="primario" onClick={() => setEditando(nuevo)}>
               <Plus size={16} /> Nuevo rubro
@@ -65,62 +84,13 @@ export function RubrosPage() {
           )}
         </div>
         <Aviso>{rubros.error?.message}</Aviso>
-        <div className="tabla-contenedor">
-          <table className="tabla">
-            <thead>
-              <tr>
-                <th>Código</th>
-                <th>Nombre</th>
-                <th>Rubro padre</th>
-                <th>Productos</th>
-                <th>Orden</th>
-                <th>Estado</th>
-                {conAcciones && <th />}
-              </tr>
-            </thead>
-            <tbody>
-              {lista.map(({ rubro: r, nivel }) => (
-                <tr key={r.id}>
-                  <td>{r.codigo}</td>
-                  <td style={{ paddingLeft: 12 + nivel * 24 }}>
-                    {nivel > 0 && <span className="texto-secundario">└ </span>}
-                    {r.nombre}
-                    {r.descripcion && <div className="texto-secundario">{r.descripcion}</div>}
-                  </td>
-                  <td>{r.nombrePadre}</td>
-                  <td>{r.productos.toLocaleString('es-AR')}</td>
-                  <td>{r.orden}</td>
-                  <td>
-                    <EstadoActivo activo={r.activo} />
-                  </td>
-                  {conAcciones && (
-                    <td className="acciones">
-                      {puedeEditar && (
-                        <Boton chico onClick={() => setEditando(r)} aria-label={`Editar ${r.nombre}`}>
-                          <Pencil size={14} /> Editar
-                        </Boton>
-                      )}{' '}
-                      {puedeEliminar && (
-                        <Boton
-                          chico
-                          variante="peligro"
-                          disabled={r.productos > 0}
-                          title={r.productos > 0 ? 'Tiene productos: desactivalo en lugar de eliminarlo' : undefined}
-                          onClick={() => setEliminando(r)}
-                          aria-label={`Eliminar ${r.nombre}`}
-                        >
-                          <Trash2 size={14} /> Eliminar
-                        </Boton>
-                      )}
-                    </td>
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {rubros.isPending && <div className="vacio">Cargando…</div>}
-          {rubros.isSuccess && lista.length === 0 && <div className="vacio">No hay rubros{filtro && ' que coincidan con la búsqueda'}.</div>}
+        <div className="acordeon">
+          {arbol.map((nodo) => (
+            <ItemRubro key={nodo.rubro.id} nodo={nodo} nivel={0} acciones={acciones} />
+          ))}
         </div>
+        {rubros.isPending && <div className="vacio">Cargando…</div>}
+        {rubros.isSuccess && arbol.length === 0 && <div className="vacio">No hay rubros{filtro && ' que coincidan con la búsqueda'}.</div>}
       </Tarjeta>
 
       <Modal titulo={editando?.id ? 'Editar rubro' : 'Nuevo rubro'} abierto={!!editando} alCerrar={() => setEditando(null)}>
@@ -146,11 +116,24 @@ export function RubrosPage() {
   )
 }
 
+interface Nodo {
+  rubro: Rubro
+  hijos: Nodo[]
+}
+
+interface Acciones {
+  abierto: (id: number) => boolean
+  alternar: (id: number) => void
+  editar?: (r: Rubro) => void
+  eliminar?: (r: Rubro) => void
+}
+
 /**
- * Orden de árbol: cada padre seguido de sus hijos, nietos, etc., y después el siguiente padre.
- * Entre hermanos ordena por Orden (los de Orden 0, sin asignar, van al final) y luego por nombre. Un rubro cuyo padre no está en la lista va como raíz.
+ * Árbol de rubros: cada padre con sus hijos, y cada hijo con sus nietos.
+ * Entre hermanos ordena por Orden (los de Orden 0, sin asignar, van al final) y luego por nombre.
+ * Un rubro cuyo padre no está en la lista va como raíz.
  */
-function ordenarPorJerarquia(rubros: Rubro[]): { rubro: Rubro; nivel: number }[] {
+function armarArbol(rubros: Rubro[]): Nodo[] {
   const ids = new Set(rubros.map((r) => r.id))
   const hijos = new Map<number | null, Rubro[]>()
   const clave = (orden: number) => (orden === 0 ? Number.MAX_SAFE_INTEGER : orden)
@@ -160,20 +143,98 @@ function ordenarPorJerarquia(rubros: Rubro[]): { rubro: Rubro; nivel: number }[]
   }
   for (const grupo of hijos.values()) grupo.sort((a, b) => clave(a.orden) - clave(b.orden) || a.nombre.localeCompare(b.nombre, 'es'))
 
-  const resultado: { rubro: Rubro; nivel: number }[] = []
   const vistos = new Set<number>()
-  const recorrer = (padre: number | null, nivel: number) => {
-    for (const r of hijos.get(padre) ?? []) {
-      if (vistos.has(r.id)) continue
-      vistos.add(r.id)
-      resultado.push({ rubro: r, nivel })
-      recorrer(r.id, nivel + 1)
-    }
-  }
-  recorrer(null, 0)
+  const armar = (padre: number | null): Nodo[] =>
+    (hijos.get(padre) ?? [])
+      .filter((r) => !vistos.has(r.id) && vistos.add(r.id))
+      .map((r) => ({ rubro: r, hijos: armar(r.id) }))
+  const raices = armar(null)
   // Si hubiera un ciclo en los datos, esos rubros no cuelgan de ninguna raíz: se agregan al final.
-  for (const r of rubros) if (!vistos.has(r.id)) recorrer(r.idPadre, 0)
-  return resultado
+  for (const r of rubros) if (!vistos.has(r.id)) raices.push(...armar(r.idPadre))
+  return raices
+}
+
+/** Deja los rubros que coinciden con la búsqueda, con sus descendientes, y los padres que llevan hasta ellos. */
+function filtrarArbol(nodos: Nodo[], filtro: string): Nodo[] {
+  if (!filtro) return nodos
+  return nodos.flatMap((n) => {
+    if (n.rubro.nombre.toLowerCase().includes(filtro) || n.rubro.codigo.toLowerCase().includes(filtro)) return [n]
+    const hijos = filtrarArbol(n.hijos, filtro)
+    return hijos.length ? [{ ...n, hijos }] : []
+  })
+}
+
+function aplanar(nodos: Nodo[], nivel = 0): { rubro: Rubro; nivel: number }[] {
+  return nodos.flatMap((n) => [{ rubro: n.rubro, nivel }, ...aplanar(n.hijos, nivel + 1)])
+}
+
+function ItemRubro({ nodo, nivel, acciones }: { nodo: Nodo; nivel: number; acciones: Acciones }) {
+  const { rubro: r, hijos } = nodo
+  const abierto = hijos.length > 0 && acciones.abierto(r.id)
+  const panel = `rubro-${r.id}-hijos`
+  return (
+    <div className={`acordeon__item${nivel === 0 ? ' acordeon__item--raiz' : ''}`}>
+      <div className="acordeon__fila" style={{ '--nivel': nivel } as CSSProperties}>
+        <button
+          type="button"
+          className="acordeon__boton"
+          onClick={() => hijos.length && acciones.alternar(r.id)}
+          aria-expanded={hijos.length ? abierto : undefined}
+          aria-controls={hijos.length ? panel : undefined}
+        >
+          <span className={`acordeon__flecha${abierto ? ' acordeon__flecha--abierta' : ''}`} aria-hidden="true">
+            {hijos.length > 0 && <ChevronRight size={18} />}
+          </span>
+          <span className="acordeon__texto">
+            <span className="acordeon__titulo">
+              <span className="acordeon__codigo">{r.codigo}</span> {r.nombre}
+            </span>
+            {r.descripcion && <span className="texto-secundario acordeon__descripcion">{r.descripcion}</span>}
+            <span className="acordeon__datos">
+              <span>{r.productos.toLocaleString('es-AR')} {r.productos === 1 ? 'producto' : 'productos'}</span>
+              {hijos.length > 0 && <span>{hijos.length} {hijos.length === 1 ? 'subrubro' : 'subrubros'}</span>}
+              <span>Orden {r.orden}</span>
+              <EstadoActivo activo={r.activo} />
+            </span>
+          </span>
+        </button>
+        {(acciones.editar || acciones.eliminar) && (
+          <div className="acordeon__acciones">
+            {acciones.editar && (
+              <Boton chico onClick={() => acciones.editar?.(r)} aria-label={`Editar ${r.nombre}`} title="Editar">
+                <Pencil size={14} /> <span className="solo-ancho">Editar</span>
+              </Boton>
+            )}
+            {acciones.eliminar && (
+              <Boton
+                chico
+                variante="peligro"
+                disabled={r.productos > 0 || hijos.length > 0}
+                title={
+                  r.productos > 0
+                    ? 'Tiene productos: desactivalo en lugar de eliminarlo'
+                    : hijos.length > 0
+                      ? 'Tiene subrubros: eliminalos o movelos primero'
+                      : 'Eliminar'
+                }
+                onClick={() => acciones.eliminar?.(r)}
+                aria-label={`Eliminar ${r.nombre}`}
+              >
+                <Trash2 size={14} /> <span className="solo-ancho">Eliminar</span>
+              </Boton>
+            )}
+          </div>
+        )}
+      </div>
+      {abierto && (
+        <div className="acordeon__panel" id={panel}>
+          {hijos.map((h) => (
+            <ItemRubro key={h.rubro.id} nodo={h} nivel={nivel + 1} acciones={acciones} />
+          ))}
+        </div>
+      )}
+    </div>
+  )
 }
 
 /** Ids del rubro y de todos sus descendientes: no pueden ser su padre. */
@@ -195,7 +256,7 @@ function FormularioRubro({ inicial, rubros, alTerminar }: { inicial: Edicion; ru
   const cliente = useQueryClient()
   const [datos, setDatos] = useState(inicial)
   const excluidos = inicial.id ? descendientes(inicial.id, rubros) : new Set<number>()
-  const posiblesPadres = ordenarPorJerarquia(rubros).filter(({ rubro }) => !excluidos.has(rubro.id))
+  const posiblesPadres = aplanar(armarArbol(rubros)).filter(({ rubro }) => !excluidos.has(rubro.id))
   const guardar = useMutation({
     mutationFn: (d: Edicion) => {
       const cuerpo = { codigo: d.codigo, nombre: d.nombre, descripcion: d.descripcion || null, idPadre: d.idPadre, orden: d.orden, activo: d.activo }
