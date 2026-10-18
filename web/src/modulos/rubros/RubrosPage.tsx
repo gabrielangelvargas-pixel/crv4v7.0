@@ -148,16 +148,17 @@ export function RubrosPage() {
 
 /**
  * Orden de árbol: cada padre seguido de sus hijos, nietos, etc., y después el siguiente padre.
- * Entre hermanos ordena por Orden y luego por nombre. Un rubro cuyo padre no está en la lista va como raíz.
+ * Entre hermanos ordena por Orden (los de Orden 0, sin asignar, van al final) y luego por nombre. Un rubro cuyo padre no está en la lista va como raíz.
  */
 function ordenarPorJerarquia(rubros: Rubro[]): { rubro: Rubro; nivel: number }[] {
   const ids = new Set(rubros.map((r) => r.id))
   const hijos = new Map<number | null, Rubro[]>()
+  const clave = (orden: number) => (orden === 0 ? Number.MAX_SAFE_INTEGER : orden)
   for (const r of rubros) {
     const padre = r.idPadre != null && ids.has(r.idPadre) ? r.idPadre : null
     hijos.set(padre, [...(hijos.get(padre) ?? []), r])
   }
-  for (const grupo of hijos.values()) grupo.sort((a, b) => a.orden - b.orden || a.nombre.localeCompare(b.nombre, 'es'))
+  for (const grupo of hijos.values()) grupo.sort((a, b) => clave(a.orden) - clave(b.orden) || a.nombre.localeCompare(b.nombre, 'es'))
 
   const resultado: { rubro: Rubro; nivel: number }[] = []
   const vistos = new Set<number>()
