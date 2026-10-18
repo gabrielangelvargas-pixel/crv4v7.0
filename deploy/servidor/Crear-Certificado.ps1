@@ -18,7 +18,9 @@
 param(
     [string[]]$Direcciones = @('192.168.100.128'),
     [string[]]$Nombres = @($env:COMPUTERNAME, 'localhost'),
-    [int]$AniosServidor = 2
+    [int]$AniosServidor = 2,
+    # Si se pasa, no se pregunta (lo usa Instalar-Todo.ps1).
+    [string]$ClavePfx
 )
 $ErrorActionPreference = 'Stop'
 . "$PSScriptRoot\Comun.ps1"
@@ -49,7 +51,7 @@ $servidor = New-SelfSignedCertificate -Subject 'CN=CRV4 API' -FriendlyName 'CRV4
     -CertStoreLocation Cert:\LocalMachine\My -NotAfter (Get-Date).AddYears($AniosServidor) `
     -TextExtension @("2.5.29.17={text}$($san -join '&')", '2.5.29.37={text}1.3.6.1.5.5.7.3.1')
 
-$clave = Leer-Secreto 'Contraseña para el archivo PFX (guardala: la pide Configurar-Secretos.ps1)'
+$clave = if ($ClavePfx) { $ClavePfx } else { Leer-Secreto 'Contraseña para el archivo PFX (guardala: la pide Configurar-Secretos.ps1)' }
 $rutaPfx = Join-Path $CarpetaCertificados 'crv4-api.pfx'
 Export-PfxCertificate -Cert $servidor -FilePath $rutaPfx -Password (ConvertTo-SecureString $clave -AsPlainText -Force) -Force | Out-Null
 Remove-Item "Cert:\LocalMachine\My\$($servidor.Thumbprint)"

@@ -14,7 +14,10 @@
 #>
 param(
     [int]$Puerto = 5443,
-    [switch]$RegenerarClaveSesiones
+    [switch]$RegenerarClaveSesiones,
+    # Si se pasan las dos claves no pregunta nada y usa los valores por defecto (lo usa Instalar-Todo.ps1).
+    [string]$ClaveDb,
+    [string]$ClavePfx
 )
 $ErrorActionPreference = 'Stop'
 . "$PSScriptRoot\Comun.ps1"
@@ -24,18 +27,22 @@ if (-not (Get-Service $NombreServicio -ErrorAction SilentlyContinue)) { throw 'P
 
 $actual = $null
 if (Test-Path $ArchivoSecretos) { $actual = Get-Content $ArchivoSecretos -Raw | ConvertFrom-Json }
+$automatico = $ClaveDb -and $ClavePfx
+if ($automatico) {
+    function Leer-Valor([string]$Texto, [string]$PorDefecto) { return $PorDefecto }
+}
 
 Write-Host '--- Base de datos (cuenta de la API) ---'
 $servidor = Leer-Valor 'Servidor MySQL' 'localhost'
 $puertoDb = [int](Leer-Valor 'Puerto MySQL' '3306')
 $base = Leer-Valor 'Base de datos' 'crv4_datos'
 $usuario = Leer-Valor 'Usuario MySQL de la API' 'crv4_api'
-$claveDb = Leer-Secreto "Contraseña de $usuario"
+$claveDb = if ($automatico) { $ClaveDb } else { Leer-Secreto "Contraseña de $usuario" }
 
 Write-Host '--- Certificado HTTPS ---'
 $pfx = Leer-Valor 'Archivo PFX' (Join-Path $CarpetaCertificados 'crv4-api.pfx')
 if (-not (Test-Path $pfx)) { throw "No existe $pfx. Ejecutá Crear-Certificado.ps1." }
-$clavePfx = Leer-Secreto 'Contraseña del PFX'
+$clavePfx = if ($automatico) { $ClavePfx } else { Leer-Secreto 'Contraseña del PFX' }
 try { [void][Security.Cryptography.X509Certificates.X509Certificate2]::new($pfx, $clavePfx) }
 catch { throw 'La contraseña del PFX no es correcta.' }
 icacls $pfx /grant "NT SERVICE\${NombreServicio}:R" | Out-Null

@@ -16,7 +16,10 @@ param(
     [string]$Servidor = 'localhost',
     [int]$Puerto = 3306,
     [string]$Base = 'crv4_datos',
-    [string]$Usuario = 'crv4_migraciones'
+    [string]$Usuario = 'crv4_migraciones',
+    # Si se pasa, no se pregunta (lo usa Instalar-Todo.ps1). -Si aplica sin pedir confirmación.
+    [string]$Clave,
+    [switch]$Si
 )
 $ErrorActionPreference = 'Stop'
 . "$PSScriptRoot\Comun.ps1"
@@ -25,7 +28,7 @@ Confirmar-Administrador
 $exe = Join-Path $CarpetaApi 'Crv4.Api.exe'
 if (-not (Test-Path $exe)) { throw "No encuentro $exe. Instalá la API con Instalar-Api.ps1." }
 
-$clave = Leer-Secreto "Contraseña de MySQL para $Usuario"
+$clave = if ($Clave) { $Clave } else { Leer-Secreto "Contraseña de MySQL para $Usuario" }
 
 $servicio = Get-Service $NombreServicio -ErrorAction SilentlyContinue
 if ($servicio -and $servicio.Status -eq 'Running') {
@@ -50,7 +53,7 @@ if ($mysqldump) {
 
 $env:CRV4_ConnectionStrings__Migraciones = Armar-CadenaMySql $Servidor $Puerto $Base $Usuario $clave
 try {
-    & $exe migrar
+    if ($Si) { & $exe migrar --si } else { & $exe migrar }
     $resultado = $LASTEXITCODE
 } finally { Remove-Item Env:\CRV4_ConnectionStrings__Migraciones -ErrorAction SilentlyContinue }
 

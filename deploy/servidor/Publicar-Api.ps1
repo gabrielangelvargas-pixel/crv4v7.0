@@ -13,5 +13,5 @@ if ($LASTEXITCODE -ne 0) { throw 'Las pruebas fallaron. No se publica.' }
 dotnet publish "$raiz\api\src\Crv4.Api\Crv4.Api.csproj" -c Release -r win-x64 --self-contained false -o $salida
 if ($LASTEXITCODE -ne 0) { throw 'Falló la publicación.' }
 
-Copy-Item "$PSScriptRoot\*.ps1", "$PSScriptRoot\*.sql" $salida
+Copy-Item "$PSScriptRoot\*.ps1", "$PSScriptRoot\*.sql", "$PSScriptRoot\*.cmd" $salida
 Write-Host "Listo: $salida. Copiá esa carpeta al servidor y ejecutá ahí Instalar-Api.ps1."

@@ -42,7 +42,8 @@ export function RubrosPage() {
     },
   })
   const filtro = buscar.trim().toLowerCase()
-  const lista = (rubros.data ?? []).filter((r) => !filtro || r.nombre.toLowerCase().includes(filtro) || r.codigo.toLowerCase().includes(filtro))
+  const arbol = ordenarPorJerarquia(rubros.data ?? [])
+  const lista = arbol.filter(({ rubro: r }) => !filtro || r.nombre.toLowerCase().includes(filtro) || r.codigo.toLowerCase().includes(filtro))
   const conAcciones = puedeEditar || puedeEliminar
 
   return (
@@ -78,10 +79,11 @@ export function RubrosPage() {
               </tr>
             </thead>
             <tbody>
-              {lista.map((r) => (
+              {lista.map(({ rubro: r, nivel }) => (
                 <tr key={r.id}>
                   <td>{r.codigo}</td>
-                  <td>
+                  <td style={{ paddingLeft: 12 + nivel * 24 }}>
+                    {nivel > 0 && <span className="texto-secundario">└ </span>}
                     {r.nombre}
                     {r.descripcion && <div className="texto-secundario">{r.descripcion}</div>}
                   </td>
@@ -144,6 +146,35 @@ export function RubrosPage() {
   )
 }
 
+/**
+ * Orden de árbol: cada padre seguido de sus hijos, nietos, etc., y después el siguiente padre.
+ * Entre hermanos ordena por Orden y luego por nombre. Un rubro cuyo padre no está en la lista va como raíz.
+ */
+function ordenarPorJerarquia(rubros: Rubro[]): { rubro: Rubro; nivel: number }[] {
+  const ids = new Set(rubros.map((r) => r.id))
+  const hijos = new Map<number | null, Rubro[]>()
+  for (const r of rubros) {
+    const padre = r.idPadre != null && ids.has(r.idPadre) ? r.idPadre : null
+    hijos.set(padre, [...(hijos.get(padre) ?? []), r])
+  }
+  for (const grupo of hijos.values()) grupo.sort((a, b) => a.orden - b.orden || a.nombre.localeCompare(b.nombre, 'es'))
+
+  const resultado: { rubro: Rubro; nivel: number }[] = []
+  const vistos = new Set<number>()
+  const recorrer = (padre: number | null, nivel: number) => {
+    for (const r of hijos.get(padre) ?? []) {
+      if (vistos.has(r.id)) continue
+      vistos.add(r.id)
+      resultado.push({ rubro: r, nivel })
+      recorrer(r.id, nivel + 1)
+    }
+  }
+  recorrer(null, 0)
+  // Si hubiera un ciclo en los datos, esos rubros no cuelgan de ninguna raíz: se agregan al final.
+  for (const r of rubros) if (!vistos.has(r.id)) recorrer(r.idPadre, 0)
+  return resultado
+}
+
 /** Ids del rubro y de todos sus descendientes: no pueden ser su padre. */
 function descendientes(id: number, rubros: Rubro[]): Set<number> {
   const resultado = new Set([id])
@@ -163,7 +194,7 @@ function FormularioRubro({ inicial, rubros, alTerminar }: { inicial: Edicion; ru
   const cliente = useQueryClient()
   const [datos, setDatos] = useState(inicial)
   const excluidos = inicial.id ? descendientes(inicial.id, rubros) : new Set<number>()
-  const posiblesPadres = rubros.filter((r) => !excluidos.has(r.id))
+  const posiblesPadres = ordenarPorJerarquia(rubros).filter(({ rubro }) => !excluidos.has(rubro.id))
   const guardar = useMutation({
     mutationFn: (d: Edicion) => {
       const cuerpo = { codigo: d.codigo, nombre: d.nombre, descripcion: d.descripcion || null, idPadre: d.idPadre, orden: d.orden, activo: d.activo }
@@ -202,8 +233,9 @@ function FormularioRubro({ inicial, rubros, alTerminar }: { inicial: Edicion; ru
         onChange={(e) => setDatos({ ...datos, idPadre: e.target.value ? Number(e.target.value) : null })}
       >
         <option value="">(ninguno)</option>
-        {posiblesPadres.map((r) => (
+        {posiblesPadres.map(({ rubro: r, nivel }) => (
           <option key={r.id} value={r.id}>
+            {'   '.repeat(nivel)}
             {r.codigo} · {r.nombre}
           </option>
         ))}
