@@ -51,8 +51,7 @@ export function RubrosPage() {
 
   return (
     <>
-      <h1 className="contenido__titulo">Rubros</h1>
-      <Tarjeta>
+      <Tarjeta className="tarjeta--lista">
         <div className="barra">
           <input
             className="campo__control barra__busqueda"
@@ -74,13 +73,15 @@ export function RubrosPage() {
           )}
         </div>
         <Aviso>{rubros.error?.message}</Aviso>
-        <div className="acordeon">
-          {arbol.map((nodo) => (
-            <ItemRubro key={nodo.rubro.id} nodo={nodo} nivel={0} acciones={acciones} />
-          ))}
+        <div className="zona-desplazable">
+          <div className="acordeon">
+            {arbol.map((nodo) => (
+              <ItemRubro key={nodo.rubro.id} nodo={nodo} nivel={0} acciones={acciones} />
+            ))}
+          </div>
+          {rubros.isPending && <div className="vacio">Cargando…</div>}
+          {rubros.isSuccess && arbol.length === 0 && <div className="vacio">No hay rubros{filtro && ' que coincidan con la búsqueda'}.</div>}
         </div>
-        {rubros.isPending && <div className="vacio">Cargando…</div>}
-        {rubros.isSuccess && arbol.length === 0 && <div className="vacio">No hay rubros{filtro && ' que coincidan con la búsqueda'}.</div>}
       </Tarjeta>
 
       <Modal titulo={editando?.id ? 'Editar rubro' : 'Nuevo rubro'} abierto={!!editando} alCerrar={() => setEditando(null)}>

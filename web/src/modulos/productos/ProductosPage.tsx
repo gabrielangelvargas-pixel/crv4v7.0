@@ -134,8 +134,7 @@ export function ProductosPage() {
 
   return (
     <>
-      <h1 className="contenido__titulo">Productos</h1>
-      <Tarjeta>
+      <Tarjeta className="tarjeta--lista">
         <div className="filtros-productos">
           <input
             className="campo__control filtros-productos__busqueda"
@@ -183,7 +182,7 @@ export function ProductosPage() {
             )}
           </div>
         )}
-        <div className="tabla-contenedor">
+        <div className="tabla-contenedor zona-desplazable">
           <table className="tabla tabla-productos">
             <thead>
               <tr>

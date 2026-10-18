@@ -16,6 +16,7 @@
 
 /* ---------- Tabla ---------- */
 .tabla .numero { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.tabla-productos thead th { position: sticky; top: 0; z-index: 1; }
 .tabla-productos__codigo { font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--color-texto-suave); font-weight: 600; }
 .tabla-productos__venta { font-weight: 700; }
 .tabla-productos__descripcion { width: 100%; min-width: 260px; }
