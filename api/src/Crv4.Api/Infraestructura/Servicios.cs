@@ -40,7 +40,8 @@ public static class Servicios
     }
 
     public static void ConfigurarBase(DbContextOptionsBuilder o, string cadena) =>
-        o.UseMySQL(cadena, my => my.MigrationsHistoryTable("crv4_migraciones"));
+        o.UseMySQL(cadena, my => my.MigrationsHistoryTable("crv4_migraciones"))
+         .AddInterceptors(BloqueoMigracionesCompatible.Instancia);
 
     public static string CadenaConexion(IConfiguration config, string nombre)
     {
