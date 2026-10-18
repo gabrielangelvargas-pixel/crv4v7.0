@@ -1,17 +1,15 @@
 import { useState } from 'react'
-import { Permisos } from '../../auth/permisos'
-import { useSesion } from '../../auth/SesionContexto'
 import { RolesPanel } from './RolesPanel'
 import { UsuariosPanel } from './UsuariosPanel'
 import '../../ui/ui.css'
 
 export function SeguridadPage() {
-  const { tiene } = useSesion()
+  // La ruta ya exige usuarios.administrar, que habilita las dos pestañas.
   const pestanas = [
-    tiene(Permisos.SeguridadUsuarios) && { id: 'usuarios', titulo: 'Usuarios' },
-    tiene(Permisos.SeguridadRoles) && { id: 'roles', titulo: 'Roles y permisos' },
-  ].filter((p): p is { id: string; titulo: string } => !!p)
-  const [activa, setActiva] = useState(pestanas[0]?.id)
+    { id: 'usuarios', titulo: 'Usuarios' },
+    { id: 'roles', titulo: 'Roles y permisos' },
+  ]
+  const [activa, setActiva] = useState(pestanas[0].id)
 
   return (
     <>

@@ -12,12 +12,12 @@ Todo se ejecuta en **PowerShell como administrador**, desde la carpeta publicada
 
 1. **En tu PC de desarrollo**: `deploy\servidor\Publicar-Api.ps1`. Corre las pruebas y deja todo en `publish\api`.
    Copiá esa carpeta al servidor.
-2. **Base y cuentas de MySQL**: editá las dos contraseñas de `crear-base.sql` y ejecutalo con `mysql -u root -p < crear-base.sql`.
-   Después borrá las contraseñas del archivo.
+2. **Cuentas de MySQL**: editá las dos contraseñas de `crear-cuentas.sql` y ejecutalo con `mysql -u root -p < crear-cuentas.sql`.
+   Después borrá las contraseñas del archivo. Usa la base existente `crv4_datos`; no crea otra.
 3. `.\Instalar-Api.ps1`: crea el servicio `CRV4Api` y abre el puerto 5443 para redes privadas.
 4. `.\Crear-Certificado.ps1 -Direcciones 192.168.100.128`: crea la CA local y el certificado HTTPS.
 5. `.\Configurar-Secretos.ps1`: pide la clave de `crv4_api`, la del PFX y el dominio de Hostinger.
-6. `.\Aplicar-Migraciones.ps1`: crea las tablas.
+6. `.\Aplicar-Migraciones.ps1`: respalda `crv4_datos` y agrega lo de la 7.0 (ver `base-de-datos.md`).
 7. `.\Crear-Administrador.ps1`: crea tu usuario.
 8. `Start-Service CRV4Api` y probá `https://192.168.100.128:5443/api/salud` desde otra PC.
 

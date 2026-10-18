@@ -17,9 +17,11 @@ Hostinger toma el repositorio de GitHub y **compila la web él mismo** cada vez 
 Si cambia el dominio (por ejemplo a uno propio), hay que actualizarlo en `Cors:OrigenesPermitidos` de
 `api/src/Crv4.Api/appsettings.json` o en el servidor con `Configurar-Secretos.ps1`.
 
-## Cambiar la dirección de la API
+## Servidores de la API
 
-Editar `web/public/config.json` y subir el cambio a `main`.
+`web/public/config.json` tiene la lista de servidores (hoy el del negocio y la PC de casa). Al abrir la web se prueban
+todos y se usa el primero que responde; en el login se puede elegir otro. Para agregar o cambiar uno, editar ese
+archivo y subirlo a `main`.
 
 ## Cómo llega la versión nueva a cada PC
 

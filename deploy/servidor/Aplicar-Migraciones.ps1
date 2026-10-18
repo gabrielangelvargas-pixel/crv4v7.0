@@ -15,7 +15,7 @@
 param(
     [string]$Servidor = 'localhost',
     [int]$Puerto = 3306,
-    [string]$Base = 'crv4_v7',
+    [string]$Base = 'crv4_datos',
     [string]$Usuario = 'crv4_migraciones'
 )
 $ErrorActionPreference = 'Stop'

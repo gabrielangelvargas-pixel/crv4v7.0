@@ -7,10 +7,9 @@ import { Selector, Tarjeta } from '../../ui/componentes'
 import './inicio.css'
 
 interface ResumenInicio {
-  productosActivos: number | null
-  clientes: number | null
+  productosActivos: number
+  clientes: number
   rubros: number
-  usuarios: number
 }
 
 const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
@@ -25,16 +24,16 @@ export function InicioPage() {
   const [anioSemanal, setAnioSemanal] = useState(hoy.getFullYear())
 
   const valor = (n: number | null | undefined) => (resumen.isPending ? '…' : n == null ? '—' : n.toLocaleString('es-AR'))
-  const pie = (n: number | null | undefined) => (resumen.isError ? 'Sin conexión' : n === null ? 'Disponible con el módulo' : 'Actualizado desde MySQL')
+  const pie = resumen.isError ? 'Sin conexión' : 'Actualizado desde MySQL'
 
   return (
     <>
       <h1 className="contenido__titulo">Inicio</h1>
       <div className="inicio-tarjetas">
-        <Indicador icono={PackageSearch} titulo="Productos activos" valor={valor(resumen.data?.productosActivos)} pie={pie(resumen.data?.productosActivos)} />
-        <Indicador icono={Users} titulo="Clientes" valor={valor(resumen.data?.clientes)} pie={pie(resumen.data?.clientes)} />
-        <Indicador icono={Tag} titulo="Rubros" valor={valor(resumen.data?.rubros)} pie={pie(resumen.data?.rubros)} />
-        <Indicador icono={Boxes} titulo="Permisos" valor={String(usuario?.permisos.length ?? 0)} pie={usuario?.rol ?? ''} />
+        <Indicador icono={PackageSearch} titulo="Productos activos" valor={valor(resumen.data?.productosActivos)} pie={pie} />
+        <Indicador icono={Users} titulo="Clientes" valor={valor(resumen.data?.clientes)} pie={pie} />
+        <Indicador icono={Tag} titulo="Rubros" valor={valor(resumen.data?.rubros)} pie={pie} />
+        <Indicador icono={Boxes} titulo="Permisos" valor={String(usuario?.permisos.length ?? 0)} pie={usuario?.roles.join(', ') ?? ''} />
       </div>
 
       <div className="inicio-graficos">

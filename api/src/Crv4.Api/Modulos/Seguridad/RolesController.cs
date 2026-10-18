@@ -8,76 +8,96 @@ namespace Crv4.Api.Modulos.Seguridad;
 
 [ApiController]
 [Route("api/seguridad")]
+[TienePermiso(Permisos.UsuariosAdministrar)]
 public class RolesController(AppDbContext db) : ControllerBase
 {
     [HttpGet("permisos")]
-    [TienePermiso(Permisos.SeguridadRoles)]
-    public async Task<IReadOnlyList<PermisoDto>> ListarPermisos(CancellationToken ct) =>
-        await db.Permisos.AsNoTracking().OrderBy(p => p.Modulo).ThenBy(p => p.Codigo)
-            .Select(p => new PermisoDto(p.Codigo, p.Modulo, p.Descripcion)).ToListAsync(ct);
+    public async Task<IReadOnlyList<PermisoDto>> ListarPermisos(CancellationToken ct)
+    {
+        var permisos = await db.Permisos.AsNoTracking().Where(p => p.Activo).ToListAsync(ct);
+        return permisos.Select(p => new PermisoDto(p.Codigo, Permisos.ModuloDe(p.Codigo), p.Descripcion))
+            .OrderBy(p => p.Modulo).ThenBy(p => p.Codigo).ToList();
+    }
 
-    // También lo usa la pantalla de usuarios para elegir el rol.
     [HttpGet("roles")]
-    [TienePermiso(Permisos.SeguridadRoles, Permisos.SeguridadUsuarios)]
     public async Task<IReadOnlyList<RolDto>> ListarRoles(CancellationToken ct) =>
         await db.Roles.AsNoTracking().OrderBy(r => r.Nombre)
-            .Select(r => new RolDto(r.Id, r.Nombre, r.Descripcion, r.EsSistema, r.Usuarios.Count,
-                r.Permisos.Select(p => p.PermisoCodigo).OrderBy(c => c).ToList()))
+            .Select(r => new RolDto(r.Id, r.Nombre, r.Descripcion, r.Activo, r.Nombre == Rol.NombreAdministrador, r.Usuarios.Count,
+                r.Permisos.Select(p => p.Permiso.Codigo).OrderBy(c => c).ToList()))
             .ToListAsync(ct);
 
     [HttpPost("roles")]
-    [TienePermiso(Permisos.SeguridadRoles)]
     public async Task<ActionResult<RolDto>> Crear(RolGuardar datos, CancellationToken ct)
     {
-        var rol = new Rol { Nombre = datos.Nombre.Trim(), Descripcion = datos.Descripcion?.Trim() };
-        await ValidarAsync(rol.Nombre, null, datos.Permisos, ct);
-        rol.Permisos = datos.Permisos.Distinct().Select(c => new RolPermiso { PermisoCodigo = c }).ToList();
+        var nombre = datos.Nombre.Trim();
+        await ValidarNombreAsync(nombre, null, ct);
+        var permisos = await PermisosValidosAsync(datos.Permisos, ct);
+        var rol = new Rol
+        {
+            Nombre = nombre,
+            Descripcion = Limpio(datos.Descripcion),
+            Activo = datos.Activo,
+            Permisos = permisos.Select(p => new RolPermiso { PermisoId = p.Id }).ToList(),
+        };
         db.Roles.Add(rol);
         await db.SaveChangesAsync(ct);
-        return CreatedAtAction(nameof(ListarRoles), new RolDto(rol.Id, rol.Nombre, rol.Descripcion, false, 0, datos.Permisos.Distinct().Order().ToList()));
+        return CreatedAtAction(nameof(ListarRoles), new RolDto(rol.Id, rol.Nombre, rol.Descripcion, rol.Activo, false, 0,
+            permisos.Select(p => p.Codigo).Order().ToList()));
     }
 
     [HttpPut("roles/{id:int}")]
-    [TienePermiso(Permisos.SeguridadRoles)]
     public async Task<IActionResult> Actualizar(int id, RolGuardar datos, CancellationToken ct)
     {
         var rol = await db.Roles.Include(r => r.Permisos).FirstOrDefaultAsync(r => r.Id == id, ct)
                   ?? throw new NoEncontrado("El rol no existe.");
-        if (rol.EsSistema)
+        if (rol.EsAdministrador)
             throw new ErrorNegocio("El rol Administrador no se puede modificar: siempre tiene todos los permisos.");
-        await ValidarAsync(datos.Nombre.Trim(), id, datos.Permisos, ct);
+        var nombre = datos.Nombre.Trim();
+        if (nombre == Rol.NombreAdministrador)
+            throw new ErrorNegocio("Ese nombre está reservado.");
+        await ValidarNombreAsync(nombre, id, ct);
+        var permisos = await PermisosValidosAsync(datos.Permisos, ct);
 
-        rol.Nombre = datos.Nombre.Trim();
-        rol.Descripcion = datos.Descripcion?.Trim();
-        rol.Permisos.Clear();
-        rol.Permisos.AddRange(datos.Permisos.Distinct().Select(c => new RolPermiso { RolId = id, PermisoCodigo = c }));
+        rol.Nombre = nombre;
+        rol.Descripcion = Limpio(datos.Descripcion);
+        rol.Activo = datos.Activo;
+        var nuevos = permisos.Select(p => p.Id).ToHashSet();
+        rol.Permisos.RemoveAll(rp => !nuevos.Contains(rp.PermisoId));
+        rol.Permisos.AddRange(nuevos.Except(rol.Permisos.Select(rp => rp.PermisoId)).Select(pid => new RolPermiso { RolId = id, PermisoId = pid }));
         await db.SaveChangesAsync(ct);
         // Los permisos nuevos llegan a cada usuario en su próxima renovación de token (pocos minutos).
         return NoContent();
     }
 
     [HttpDelete("roles/{id:int}")]
-    [TienePermiso(Permisos.SeguridadRoles)]
     public async Task<IActionResult> Borrar(int id, CancellationToken ct)
     {
         var rol = await db.Roles.Include(r => r.Usuarios).FirstOrDefaultAsync(r => r.Id == id, ct)
                   ?? throw new NoEncontrado("El rol no existe.");
-        if (rol.EsSistema)
+        if (rol.EsAdministrador)
             throw new ErrorNegocio("El rol Administrador no se puede borrar.");
         if (rol.Usuarios.Count > 0)
-            throw new ErrorNegocio("El rol tiene usuarios asignados. Cambiales el rol antes de borrarlo.", StatusCodes.Status409Conflict);
+            throw new ErrorNegocio("El rol tiene usuarios asignados. Quitáselo a esos usuarios o desactivá el rol.", StatusCodes.Status409Conflict);
         db.Roles.Remove(rol);
         await db.SaveChangesAsync(ct);
         return NoContent();
     }
 
-    private async Task ValidarAsync(string nombre, int? id, IReadOnlyList<string> permisos, CancellationToken ct)
+    private async Task ValidarNombreAsync(string nombre, int? id, CancellationToken ct)
     {
         if (await db.Roles.AnyAsync(r => r.Nombre == nombre && r.Id != id, ct))
             throw new ErrorNegocio("Ya existe un rol con ese nombre.", StatusCodes.Status409Conflict);
-        var validos = Permisos.Todos.Select(p => p.Codigo).ToHashSet();
-        var desconocidos = permisos.Where(p => !validos.Contains(p)).ToList();
+    }
+
+    private async Task<List<Permiso>> PermisosValidosAsync(IReadOnlyList<string> codigos, CancellationToken ct)
+    {
+        var distintos = codigos.Distinct().ToList();
+        var permisos = await db.Permisos.Where(p => distintos.Contains(p.Codigo) && p.Activo).ToListAsync(ct);
+        var desconocidos = distintos.Except(permisos.Select(p => p.Codigo)).ToList();
         if (desconocidos.Count > 0)
             throw new ErrorNegocio($"Permisos desconocidos: {string.Join(", ", desconocidos)}.");
+        return permisos;
     }
+
+    private static string? Limpio(string? texto) => string.IsNullOrWhiteSpace(texto) ? null : texto.Trim();
 }

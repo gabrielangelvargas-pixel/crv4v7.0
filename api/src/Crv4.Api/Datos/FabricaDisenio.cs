@@ -13,7 +13,7 @@ public class FabricaDisenio : IDesignTimeDbContextFactory<AppDbContext>
     public AppDbContext CreateDbContext(string[] args)
     {
         var cadena = Environment.GetEnvironmentVariable("CRV4_ConnectionStrings__Migraciones")
-                     ?? "server=localhost;database=crv4_v7;user=diseno";
+                     ?? "server=localhost;database=crv4_datos;user=diseno";
         var opciones = new DbContextOptionsBuilder<AppDbContext>();
         Servicios.ConfigurarBase(opciones, cadena);
         return new AppDbContext(opciones.Options);

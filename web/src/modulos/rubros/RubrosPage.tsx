@@ -1,32 +1,49 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Pencil, Plus } from 'lucide-react'
+import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { api } from '../../api/cliente'
 import { Permisos } from '../../auth/permisos'
 import { useSesion } from '../../auth/SesionContexto'
-import { Aviso, Boton, Campo, Casilla, EstadoActivo, Modal, Tarjeta } from '../../ui/componentes'
+import { Aviso, Boton, Campo, Casilla, EstadoActivo, Modal, Selector, Tarjeta } from '../../ui/componentes'
 
 export interface Rubro {
   id: number
+  codigo: string
   nombre: string
   descripcion: string | null
+  idPadre: number | null
+  nombrePadre: string | null
   orden: number
   activo: boolean
+  productos: number
 }
 
-type Edicion = Omit<Rubro, 'id'> & { id?: number }
+type Edicion = Pick<Rubro, 'codigo' | 'nombre' | 'descripcion' | 'idPadre' | 'orden' | 'activo'> & { id?: number; productos?: number }
 
-const nuevo: Edicion = { nombre: '', descripcion: '', orden: 0, activo: true }
+const nuevo: Edicion = { codigo: '', nombre: '', descripcion: '', idPadre: null, orden: 0, activo: true }
 
 export function RubrosPage() {
   const { tiene } = useSesion()
+  const puedeCrear = tiene(Permisos.RubrosCrear)
   const puedeEditar = tiene(Permisos.RubrosEditar)
+  const puedeEliminar = tiene(Permisos.RubrosEliminar)
+  const cliente = useQueryClient()
   const [buscar, setBuscar] = useState('')
   const [editando, setEditando] = useState<Edicion | null>(null)
+  const [eliminando, setEliminando] = useState<Rubro | null>(null)
 
   const rubros = useQuery({ queryKey: ['rubros'], queryFn: () => api.get<Rubro[]>('/api/rubros') })
+  const eliminar = useMutation({
+    mutationFn: (id: number) => api.delete(`/api/rubros/${id}`),
+    onSuccess: async () => {
+      await cliente.invalidateQueries({ queryKey: ['rubros'] })
+      await cliente.invalidateQueries({ queryKey: ['inicio'] })
+      setEliminando(null)
+    },
+  })
   const filtro = buscar.trim().toLowerCase()
-  const lista = (rubros.data ?? []).filter((r) => !filtro || r.nombre.toLowerCase().includes(filtro))
+  const lista = (rubros.data ?? []).filter((r) => !filtro || r.nombre.toLowerCase().includes(filtro) || r.codigo.toLowerCase().includes(filtro))
+  const conAcciones = puedeEditar || puedeEliminar
 
   return (
     <>
@@ -35,12 +52,12 @@ export function RubrosPage() {
         <div className="barra">
           <input
             className="campo__control barra__busqueda"
-            placeholder="Buscar rubro…"
+            placeholder="Buscar por código o nombre…"
             aria-label="Buscar rubro"
             value={buscar}
             onChange={(e) => setBuscar(e.target.value)}
           />
-          {puedeEditar && (
+          {puedeCrear && (
             <Boton variante="primario" onClick={() => setEditando(nuevo)}>
               <Plus size={16} /> Nuevo rubro
             </Boton>
@@ -51,27 +68,48 @@ export function RubrosPage() {
           <table className="tabla">
             <thead>
               <tr>
-                <th>Orden</th>
+                <th>Código</th>
                 <th>Nombre</th>
-                <th>Descripción</th>
+                <th>Rubro padre</th>
+                <th>Productos</th>
+                <th>Orden</th>
                 <th>Estado</th>
-                {puedeEditar && <th />}
+                {conAcciones && <th />}
               </tr>
             </thead>
             <tbody>
               {lista.map((r) => (
                 <tr key={r.id}>
+                  <td>{r.codigo}</td>
+                  <td>
+                    {r.nombre}
+                    {r.descripcion && <div className="texto-secundario">{r.descripcion}</div>}
+                  </td>
+                  <td>{r.nombrePadre}</td>
+                  <td>{r.productos.toLocaleString('es-AR')}</td>
                   <td>{r.orden}</td>
-                  <td>{r.nombre}</td>
-                  <td>{r.descripcion}</td>
                   <td>
                     <EstadoActivo activo={r.activo} />
                   </td>
-                  {puedeEditar && (
+                  {conAcciones && (
                     <td className="acciones">
-                      <Boton chico onClick={() => setEditando(r)} aria-label={`Editar ${r.nombre}`}>
-                        <Pencil size={14} /> Editar
-                      </Boton>
+                      {puedeEditar && (
+                        <Boton chico onClick={() => setEditando(r)} aria-label={`Editar ${r.nombre}`}>
+                          <Pencil size={14} /> Editar
+                        </Boton>
+                      )}{' '}
+                      {puedeEliminar && (
+                        <Boton
+                          chico
+                          variante="peligro"
+                          disabled={r.productos > 0}
+                          title={r.productos > 0 ? 'Tiene productos: desactivalo en lugar de eliminarlo' : undefined}
+                          onClick={() => setEliminando(r)}
+                          aria-label={`Eliminar ${r.nombre}`}
+                        >
+                          <Trash2 size={14} /> Eliminar
+                        </Boton>
+                      )}
                     </td>
                   )}
                 </tr>
@@ -84,18 +122,51 @@ export function RubrosPage() {
       </Tarjeta>
 
       <Modal titulo={editando?.id ? 'Editar rubro' : 'Nuevo rubro'} abierto={!!editando} alCerrar={() => setEditando(null)}>
-        {editando && <FormularioRubro inicial={editando} alTerminar={() => setEditando(null)} />}
+        {editando && <FormularioRubro inicial={editando} rubros={rubros.data ?? []} alTerminar={() => setEditando(null)} />}
+      </Modal>
+      <Modal titulo="Eliminar rubro" abierto={!!eliminando} alCerrar={() => setEliminando(null)}>
+        {eliminando && (
+          <div className="formulario">
+            <Aviso>{eliminar.error?.message}</Aviso>
+            <p>
+              ¿Eliminar el rubro <strong>{eliminando.codigo} · {eliminando.nombre}</strong>? No se puede deshacer.
+            </p>
+            <div className="formulario__acciones">
+              <Boton onClick={() => setEliminando(null)}>Cancelar</Boton>
+              <Boton variante="peligro" disabled={eliminar.isPending} onClick={() => eliminar.mutate(eliminando.id)}>
+                {eliminar.isPending ? 'Eliminando…' : 'Eliminar'}
+              </Boton>
+            </div>
+          </div>
+        )}
       </Modal>
     </>
   )
 }
 
-function FormularioRubro({ inicial, alTerminar }: { inicial: Edicion; alTerminar: () => void }) {
+/** Ids del rubro y de todos sus descendientes: no pueden ser su padre. */
+function descendientes(id: number, rubros: Rubro[]): Set<number> {
+  const resultado = new Set([id])
+  let agregados = true
+  while (agregados) {
+    agregados = false
+    for (const r of rubros)
+      if (r.idPadre != null && resultado.has(r.idPadre) && !resultado.has(r.id)) {
+        resultado.add(r.id)
+        agregados = true
+      }
+  }
+  return resultado
+}
+
+function FormularioRubro({ inicial, rubros, alTerminar }: { inicial: Edicion; rubros: Rubro[]; alTerminar: () => void }) {
   const cliente = useQueryClient()
   const [datos, setDatos] = useState(inicial)
+  const excluidos = inicial.id ? descendientes(inicial.id, rubros) : new Set<number>()
+  const posiblesPadres = rubros.filter((r) => !excluidos.has(r.id))
   const guardar = useMutation({
     mutationFn: (d: Edicion) => {
-      const cuerpo = { nombre: d.nombre, descripcion: d.descripcion, orden: d.orden, activo: d.activo }
+      const cuerpo = { codigo: d.codigo, nombre: d.nombre, descripcion: d.descripcion || null, idPadre: d.idPadre, orden: d.orden, activo: d.activo }
       return d.id ? api.put(`/api/rubros/${d.id}`, cuerpo) : api.post('/api/rubros', cuerpo)
     },
     onSuccess: async () => {
@@ -113,8 +184,30 @@ function FormularioRubro({ inicial, alTerminar }: { inicial: Edicion; alTerminar
   return (
     <form className="formulario" onSubmit={enviar}>
       <Aviso>{guardar.error?.message}</Aviso>
-      <Campo etiqueta="Nombre" value={datos.nombre} onChange={(e) => setDatos({ ...datos, nombre: e.target.value })} maxLength={100} required autoFocus />
-      <Campo etiqueta="Descripción" value={datos.descripcion ?? ''} onChange={(e) => setDatos({ ...datos, descripcion: e.target.value })} maxLength={500} />
+      <Campo
+        etiqueta="Código"
+        value={datos.codigo}
+        onChange={(e) => setDatos({ ...datos, codigo: e.target.value.toUpperCase() })}
+        maxLength={6}
+        required
+        autoFocus
+        disabled={!!inicial.productos}
+        title={inicial.productos ? 'El rubro tiene productos: el código no se puede cambiar' : undefined}
+      />
+      <Campo etiqueta="Nombre" value={datos.nombre} onChange={(e) => setDatos({ ...datos, nombre: e.target.value })} maxLength={45} required />
+      <Campo etiqueta="Descripción" value={datos.descripcion ?? ''} onChange={(e) => setDatos({ ...datos, descripcion: e.target.value })} maxLength={255} />
+      <Selector
+        etiqueta="Rubro padre"
+        value={datos.idPadre ?? ''}
+        onChange={(e) => setDatos({ ...datos, idPadre: e.target.value ? Number(e.target.value) : null })}
+      >
+        <option value="">(ninguno)</option>
+        {posiblesPadres.map((r) => (
+          <option key={r.id} value={r.id}>
+            {r.codigo} · {r.nombre}
+          </option>
+        ))}
+      </Selector>
       <Campo etiqueta="Orden" type="number" value={datos.orden} onChange={(e) => setDatos({ ...datos, orden: Number(e.target.value) })} />
       <Casilla etiqueta="Activo" checked={datos.activo} onChange={(e) => setDatos({ ...datos, activo: e.target.checked })} />
       <div className="formulario__acciones">

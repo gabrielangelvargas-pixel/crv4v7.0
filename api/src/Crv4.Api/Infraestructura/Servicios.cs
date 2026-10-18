@@ -40,8 +40,7 @@ public static class Servicios
     }
 
     public static void ConfigurarBase(DbContextOptionsBuilder o, string cadena) =>
-        o.UseMySQL(cadena, my => my.MigrationsHistoryTable("__migraciones"))
-         .UseSnakeCaseNamingConvention();
+        o.UseMySQL(cadena, my => my.MigrationsHistoryTable("crv4_migraciones"));
 
     public static string CadenaConexion(IConfiguration config, string nombre)
     {

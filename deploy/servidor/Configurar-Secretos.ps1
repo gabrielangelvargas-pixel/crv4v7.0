@@ -28,7 +28,7 @@ if (Test-Path $ArchivoSecretos) { $actual = Get-Content $ArchivoSecretos -Raw | 
 Write-Host '--- Base de datos (cuenta de la API) ---'
 $servidor = Leer-Valor 'Servidor MySQL' 'localhost'
 $puertoDb = [int](Leer-Valor 'Puerto MySQL' '3306')
-$base = Leer-Valor 'Base de datos' 'crv4_v7'
+$base = Leer-Valor 'Base de datos' 'crv4_datos'
 $usuario = Leer-Valor 'Usuario MySQL de la API' 'crv4_api'
 $claveDb = Leer-Secreto "Contraseña de $usuario"
 

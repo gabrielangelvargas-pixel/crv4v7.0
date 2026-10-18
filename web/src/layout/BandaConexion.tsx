@@ -15,7 +15,7 @@ export function BandaConexion() {
   if (isError)
     return (
       <div className="banda-conexion" role="alert">
-        No hay conexión con el servidor ({obtenerConfiguracion().apiUrl}). Revisá que la PC servidor esté encendida y, si es una PC
+        No hay conexión con el servidor {obtenerConfiguracion().nombreServidor} ({obtenerConfiguracion().apiUrl}). Revisá que la PC servidor esté encendida y, si es una PC
         nueva, que tenga instalado el certificado de CRV4.
       </div>
     )

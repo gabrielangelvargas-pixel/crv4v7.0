@@ -2,7 +2,7 @@ export interface UsuarioSesion {
   id: number
   nombreUsuario: string
   nombre: string
-  rol: string
+  roles: string[]
   permisos: string[]
   debeCambiarPassword: boolean
 }

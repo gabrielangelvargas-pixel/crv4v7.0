@@ -26,7 +26,7 @@ Navegador (cualquier PC)                          PC servidor (red local)
 | Seguridad (usuarios, roles, permisos) | ✅ | ✅ |
 | Rubros | ✅ | ✅ |
 | Inicio (tarjetas) | ✅ parcial | ✅ |
-| Productos, Clientes, Ventas, Estadísticas, Control Ventas | pendiente: falta definir el esquema a partir de `crv4_datos` | pantalla "en construcción" |
+| Productos, Clientes, Ventas, Estadísticas, Control Ventas | pendiente (tablas de `crv4_datos` ya mapeadas: productos y clientes) | pantalla "en construcción" |
 
 ## Documentación
 
@@ -42,4 +42,5 @@ Navegador (cualquier PC)                          PC servidor (red local)
 2. **La estructura de la base solo cambia con migraciones** (`dotnet ef migrations add ...`), aplicadas a mano con `Aplicar-Migraciones.ps1`. La API nunca la cambia al arrancar.
 3. **Los números de venta y de cliente los da la base** (`numeradores`), nunca `MAX(id)+1`.
 4. **Un módulo, una carpeta**, tanto en la API (`Modulos/<Modulo>`) como en la web (`src/modulos/<modulo>`).
-5. Cada permiso nuevo se agrega en `Permisos.cs` y en `web/src/auth/permisos.ts`, con una migración.
+5. Cada permiso nuevo se agrega en `Permisos.cs` y en `web/src/auth/permisos.ts`, con una migración que lo inserte (`INSERT IGNORE`).
+6. La base es `crv4_datos`, compartida con Sistema03: las migraciones solo agregan (ver `docs/base-de-datos.md`).

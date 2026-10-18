@@ -5,6 +5,7 @@ import { useSesion } from '../auth/SesionContexto'
 import { Boton } from '../ui/componentes'
 import { BandaConexion } from './BandaConexion'
 import { menu } from './menu'
+import { obtenerConfiguracion } from '../config'
 import './layout.css'
 
 export function AppLayout() {
@@ -61,7 +62,8 @@ export function AppLayout() {
         </ul>
         <div className="menu__pie">
           <strong>{usuario?.nombre}</strong>
-          <span>{usuario?.rol}</span>
+          <span>{usuario?.roles.join(', ')}</span>
+          {obtenerConfiguracion().servidores.length > 1 && <span>Servidor: {obtenerConfiguracion().nombreServidor}</span>}
           <Boton onClick={salir}>
             <LogOut size={16} /> Salir
           </Boton>

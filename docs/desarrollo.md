@@ -8,12 +8,16 @@
 
 ## Base de datos local
 
+Para desarrollar conviene una **copia** de `crv4_datos` (por ejemplo restaurando un respaldo como `crv4_datos_dev`),
+así probás las migraciones sin tocar la base que usa Sistema03.
+
 ```sql
-CREATE DATABASE crv4_v7 CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+CREATE DATABASE crv4_datos_dev CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+-- restaurá ahí un respaldo de crv4_datos: mysql -u root -p crv4_datos_dev < respaldo.sql
 CREATE DATABASE crv4_test CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 -- Usuario de desarrollo (elegí tu propia contraseña)
 CREATE USER 'crv4_dev'@'localhost' IDENTIFIED BY '...';
-GRANT ALL ON crv4_v7.* TO 'crv4_dev'@'localhost';
+GRANT ALL ON crv4_datos_dev.* TO 'crv4_dev'@'localhost';
 GRANT ALL ON crv4_test.* TO 'crv4_dev'@'localhost';
 ```
 
@@ -23,11 +27,11 @@ Las claves de desarrollo van en *user-secrets* (se guardan en tu perfil de Windo
 
 ```powershell
 cd api\src\Crv4.Api
-dotnet user-secrets set "ConnectionStrings:Principal" "server=localhost;database=crv4_v7;user=crv4_dev;password=..."
+dotnet user-secrets set "ConnectionStrings:Principal" "server=localhost;database=crv4_datos_dev;user=crv4_dev;password=..."
 dotnet user-secrets set "Jwt:Clave" "una-clave-larga-de-al-menos-32-caracteres-solo-para-desarrollo"
 
 dotnet tool restore            # instala dotnet-ef (está en api\dotnet-tools.json)
-dotnet run -- migrar           # crea las tablas
+dotnet run -- migrar           # agrega lo de la 7.0 (ver base-de-datos.md)
 dotnet run -- crear-admin      # crea tu usuario
 dotnet run --launch-profile https
 ```

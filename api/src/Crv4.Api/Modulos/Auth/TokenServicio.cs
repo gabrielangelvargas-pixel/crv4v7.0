@@ -24,7 +24,7 @@ public class TokenServicio(IOptions<JwtOpciones> opciones, TimeProvider reloj)
 {
     private readonly JwtOpciones _opciones = opciones.Value;
 
-    public TokenAcceso CrearTokenAcceso(Usuario usuario, IEnumerable<string> permisos, long sesionId)
+    public TokenAcceso CrearTokenAcceso(Usuario usuario, IEnumerable<string> roles, IEnumerable<string> permisos, long sesionId)
     {
         var ahora = reloj.GetUtcNow().UtcDateTime;
         var expira = ahora.AddMinutes(_opciones.MinutosAcceso);
@@ -33,11 +33,11 @@ public class TokenServicio(IOptions<JwtOpciones> opciones, TimeProvider reloj)
         {
             new(Claims.UsuarioId, usuario.Id.ToString()),
             new(Claims.Nombre, usuario.Nombre),
-            new(Claims.Rol, usuario.Rol.Nombre),
             new(Claims.SesionId, sesionId.ToString()),
         };
         if (usuario.DebeCambiarPassword)
             claims.Add(new Claim(Claims.DebeCambiarPassword, "1"));
+        claims.AddRange(roles.Select(r => new Claim(Claims.Rol, r)));
         claims.AddRange(permisos.Select(p => new Claim(Claims.Permiso, p)));
 
         var credenciales = new SigningCredentials(ClaveFirma(_opciones), SecurityAlgorithms.HmacSha256);

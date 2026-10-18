@@ -75,7 +75,9 @@ public static class Comandos
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var passwords = scope.ServiceProvider.GetRequiredService<PasswordServicio>();
 
-        if (await db.Usuarios.AnyAsync(u => u.RolId == RolesSistema.AdministradorId && u.Activo))
+        var adminId = await db.Roles.Where(r => r.Nombre == Rol.NombreAdministrador).Select(r => (int?)r.Id).FirstOrDefaultAsync()
+            ?? throw new InvalidOperationException("No existe el rol Administrador. Aplicá las migraciones primero (Crv4.Api.exe migrar).");
+        if (await db.UsuariosRoles.AnyAsync(ur => ur.RolId == adminId && db.Usuarios.Any(u => u.Id == ur.UsuarioId && u.Activo)))
             Console.WriteLine("Aviso: ya existe al menos un administrador activo.");
 
         var nombreUsuario = Preguntar("Usuario: ");
@@ -88,8 +90,9 @@ public static class Comandos
         if (PreguntarOculto("Repetir contraseña: ") != password)
             throw new InvalidOperationException("Las contraseñas no coinciden.");
 
-        var usuario = new Usuario { NombreUsuario = nombreUsuario, Nombre = nombre, RolId = RolesSistema.AdministradorId, PasswordHash = "" };
+        var usuario = new Usuario { NombreUsuario = nombreUsuario, Nombre = nombre, PasswordHash = "" };
         usuario.PasswordHash = passwords.Hashear(usuario, password);
+        usuario.Roles.Add(new UsuarioRol { RolId = adminId });
         db.Usuarios.Add(usuario);
         await db.SaveChangesAsync();
         Console.WriteLine($"Administrador '{nombreUsuario}' creado.");

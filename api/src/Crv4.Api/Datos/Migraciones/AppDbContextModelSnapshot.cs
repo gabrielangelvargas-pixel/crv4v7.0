@@ -19,166 +19,207 @@ namespace Crv4.Api.Datos.Migraciones
                 .HasAnnotation("ProductVersion", "10.0.13")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
+            modelBuilder.Entity("Crv4.Api.Modulos.Clientes.Cliente", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("int")
+                        .HasColumnName("IdCliente");
+
+                    b.Property<string>("Celular1")
+                        .HasColumnType("longtext")
+                        .HasColumnName("NumCelular1");
+
+                    b.Property<string>("Celular2")
+                        .HasColumnType("longtext")
+                        .HasColumnName("NumCelular2");
+
+                    b.Property<string>("Direccion")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("FechaAlta")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime(6)")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<int>("IdFiscal")
+                        .HasColumnType("int");
+
+                    b.Property<int>("IdZona")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("NombreCliente");
+
+                    b.Property<string>("NumeroFiscal")
+                        .HasColumnType("longtext");
+
+                    b.Property<decimal?>("SaldoCuenta")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("decimal(12,2)");
+
+                    b.Property<string>("TelefonoFijo")
+                        .HasColumnType("longtext")
+                        .HasColumnName("NumFijo");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("clientes", null, t =>
+                        {
+                            t.ExcludeFromMigrations();
+                        });
+                });
+
+            modelBuilder.Entity("Crv4.Api.Modulos.Productos.Producto", b =>
+                {
+                    b.Property<string>("Codigo")
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("IdProducto");
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Descripcion")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<decimal>("Descuento")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("decimal(12,2)");
+
+                    b.Property<DateTime>("FechaAlta")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime(6)")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<DateTime?>("FechaFinOferta")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("FechaInicioOferta")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("IdProveedor")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("IdRubro")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("ImagenPrincipal")
+                        .HasColumnType("longtext");
+
+                    b.Property<decimal>("PrecioCompra")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("decimal(12,2)")
+                        .HasColumnName("precioCompra");
+
+                    b.Property<decimal?>("PrecioCosto")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasPrecision(12, 2)
+                        .HasColumnType("decimal(12,2)")
+                        .HasComputedColumnSql("`precioCompra` * (1 - (`Descuento` / 100))", true);
+
+                    b.Property<decimal?>("PrecioOferta")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("decimal(12,2)");
+
+                    b.Property<decimal?>("PrecioVenta")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("decimal(12,2)");
+
+                    b.Property<string>("RefProveedor")
+                        .HasColumnType("longtext");
+
+                    b.Property<decimal>("Utilidad")
+                        .HasPrecision(10, 3)
+                        .HasColumnType("decimal(10,3)");
+
+                    b.HasKey("Codigo");
+
+                    b.ToTable("productos", null, t =>
+                        {
+                            t.ExcludeFromMigrations();
+                        });
+                });
+
             modelBuilder.Entity("Crv4.Api.Modulos.Rubros.Rubro", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("id");
+                        .HasColumnType("int");
 
                     b.Property<bool>("Activo")
-                        .HasColumnType("tinyint(1)")
-                        .HasColumnName("activo");
+                        .HasColumnType("tinyint(1)");
 
-                    b.Property<DateTime>("ActualizadoEn")
-                        .HasPrecision(6)
-                        .HasColumnType("datetime(6)")
-                        .HasColumnName("actualizado_en");
-
-                    b.Property<DateTime>("CreadoEn")
-                        .HasPrecision(6)
-                        .HasColumnType("datetime(6)")
-                        .HasColumnName("creado_en");
+                    b.Property<string>("Codigo")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("IdRubro");
 
                     b.Property<string>("Descripcion")
-                        .HasMaxLength(500)
-                        .HasColumnType("varchar(500)")
-                        .HasColumnName("descripcion");
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime?>("FechaModificacion")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("IdCategoriaWeb")
+                        .HasColumnType("bigint");
+
+                    b.Property<int?>("IdPadre")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ImagenPrincipal")
+                        .HasColumnType("longtext");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("nombre");
+                        .HasColumnType("longtext")
+                        .HasColumnName("NombreRubro");
 
                     b.Property<int>("Orden")
-                        .HasColumnType("int")
-                        .HasColumnName("orden");
+                        .HasColumnType("int");
 
-                    b.HasKey("Id")
-                        .HasName("pk_rubros");
+                    b.HasKey("Id");
 
-                    b.HasIndex("Nombre")
-                        .IsUnique()
-                        .HasDatabaseName("ix_rubros_nombre");
+                    b.HasIndex("Codigo")
+                        .IsUnique();
 
-                    b.ToTable("rubros", (string)null);
+                    b.HasIndex("IdPadre");
+
+                    b.ToTable("rubros", null, t =>
+                        {
+                            t.ExcludeFromMigrations();
+                        });
                 });
 
             modelBuilder.Entity("Crv4.Api.Modulos.Seguridad.Permiso", b =>
                 {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("IdPermiso");
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<string>("Codigo")
-                        .HasMaxLength(60)
-                        .HasColumnType("varchar(60)")
-                        .HasColumnName("codigo");
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
 
                     b.Property<string>("Descripcion")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("varchar(200)")
-                        .HasColumnName("descripcion");
+                        .HasColumnType("longtext");
 
-                    b.Property<string>("Modulo")
-                        .IsRequired()
-                        .HasMaxLength(60)
-                        .HasColumnType("varchar(60)")
-                        .HasColumnName("modulo");
+                    b.HasKey("Id");
 
-                    b.HasKey("Codigo")
-                        .HasName("pk_permisos");
+                    b.HasIndex("Codigo")
+                        .IsUnique();
 
-                    b.ToTable("permisos", (string)null);
-
-                    b.HasData(
-                        new
+                    b.ToTable("permisos", null, t =>
                         {
-                            Codigo = "inicio.ver",
-                            Descripcion = "Ver el panel de inicio",
-                            Modulo = "Inicio"
-                        },
-                        new
-                        {
-                            Codigo = "productos.ver",
-                            Descripcion = "Ver productos",
-                            Modulo = "Productos"
-                        },
-                        new
-                        {
-                            Codigo = "productos.editar",
-                            Descripcion = "Crear y modificar productos",
-                            Modulo = "Productos"
-                        },
-                        new
-                        {
-                            Codigo = "clientes.ver",
-                            Descripcion = "Ver clientes",
-                            Modulo = "Clientes"
-                        },
-                        new
-                        {
-                            Codigo = "clientes.editar",
-                            Descripcion = "Crear y modificar clientes",
-                            Modulo = "Clientes"
-                        },
-                        new
-                        {
-                            Codigo = "ventas.ver",
-                            Descripcion = "Ver ventas",
-                            Modulo = "Ventas"
-                        },
-                        new
-                        {
-                            Codigo = "ventas.crear",
-                            Descripcion = "Cargar ventas",
-                            Modulo = "Ventas"
-                        },
-                        new
-                        {
-                            Codigo = "ventas.editar",
-                            Descripcion = "Modificar ventas",
-                            Modulo = "Ventas"
-                        },
-                        new
-                        {
-                            Codigo = "ventas.anular",
-                            Descripcion = "Anular ventas",
-                            Modulo = "Ventas"
-                        },
-                        new
-                        {
-                            Codigo = "estadisticas.ver",
-                            Descripcion = "Ver estadísticas",
-                            Modulo = "Estadísticas"
-                        },
-                        new
-                        {
-                            Codigo = "control_ventas.ver",
-                            Descripcion = "Ver el control de ventas",
-                            Modulo = "Control Ventas"
-                        },
-                        new
-                        {
-                            Codigo = "rubros.ver",
-                            Descripcion = "Ver rubros",
-                            Modulo = "Rubros"
-                        },
-                        new
-                        {
-                            Codigo = "rubros.editar",
-                            Descripcion = "Crear y modificar rubros",
-                            Modulo = "Rubros"
-                        },
-                        new
-                        {
-                            Codigo = "seguridad.usuarios",
-                            Descripcion = "Administrar usuarios",
-                            Modulo = "Seguridad"
-                        },
-                        new
-                        {
-                            Codigo = "seguridad.roles",
-                            Descripcion = "Administrar roles y permisos",
-                            Modulo = "Seguridad"
+                            t.ExcludeFromMigrations();
                         });
                 });
 
@@ -187,39 +228,29 @@ namespace Crv4.Api.Datos.Migraciones
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
-                        .HasColumnName("id");
+                        .HasColumnName("IdRol");
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<string>("Descripcion")
-                        .HasMaxLength(250)
-                        .HasColumnType("varchar(250)")
-                        .HasColumnName("descripcion");
+                        .HasColumnType("longtext");
 
-                    b.Property<bool>("EsSistema")
-                        .HasColumnType("tinyint(1)")
-                        .HasColumnName("es_sistema");
+                    b.Property<DateTime>("FechaAlta")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime(6)")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
-                        .HasMaxLength(60)
-                        .HasColumnType("varchar(60)")
-                        .HasColumnName("nombre");
+                        .HasColumnType("longtext")
+                        .HasColumnName("NombreRol");
 
-                    b.HasKey("Id")
-                        .HasName("pk_roles");
+                    b.HasKey("Id");
 
-                    b.HasIndex("Nombre")
-                        .IsUnique()
-                        .HasDatabaseName("ix_roles_nombre");
-
-                    b.ToTable("roles", (string)null);
-
-                    b.HasData(
-                        new
+                    b.ToTable("roles", null, t =>
                         {
-                            Id = 1,
-                            Descripcion = "Acceso completo",
-                            EsSistema = true,
-                            Nombre = "Administrador"
+                            t.ExcludeFromMigrations();
                         });
                 });
 
@@ -227,95 +258,19 @@ namespace Crv4.Api.Datos.Migraciones
                 {
                     b.Property<int>("RolId")
                         .HasColumnType("int")
-                        .HasColumnName("rol_id");
+                        .HasColumnName("IdRol");
 
-                    b.Property<string>("PermisoCodigo")
-                        .HasColumnType("varchar(60)")
-                        .HasColumnName("permiso_codigo");
+                    b.Property<int>("PermisoId")
+                        .HasColumnType("int")
+                        .HasColumnName("IdPermiso");
 
-                    b.HasKey("RolId", "PermisoCodigo")
-                        .HasName("pk_roles_permisos");
+                    b.HasKey("RolId", "PermisoId");
 
-                    b.HasIndex("PermisoCodigo")
-                        .HasDatabaseName("ix_roles_permisos_permiso_codigo");
+                    b.HasIndex("PermisoId");
 
-                    b.ToTable("roles_permisos", (string)null);
-
-                    b.HasData(
-                        new
+                    b.ToTable("roles_permisos", null, t =>
                         {
-                            RolId = 1,
-                            PermisoCodigo = "inicio.ver"
-                        },
-                        new
-                        {
-                            RolId = 1,
-                            PermisoCodigo = "productos.ver"
-                        },
-                        new
-                        {
-                            RolId = 1,
-                            PermisoCodigo = "productos.editar"
-                        },
-                        new
-                        {
-                            RolId = 1,
-                            PermisoCodigo = "clientes.ver"
-                        },
-                        new
-                        {
-                            RolId = 1,
-                            PermisoCodigo = "clientes.editar"
-                        },
-                        new
-                        {
-                            RolId = 1,
-                            PermisoCodigo = "ventas.ver"
-                        },
-                        new
-                        {
-                            RolId = 1,
-                            PermisoCodigo = "ventas.crear"
-                        },
-                        new
-                        {
-                            RolId = 1,
-                            PermisoCodigo = "ventas.editar"
-                        },
-                        new
-                        {
-                            RolId = 1,
-                            PermisoCodigo = "ventas.anular"
-                        },
-                        new
-                        {
-                            RolId = 1,
-                            PermisoCodigo = "estadisticas.ver"
-                        },
-                        new
-                        {
-                            RolId = 1,
-                            PermisoCodigo = "control_ventas.ver"
-                        },
-                        new
-                        {
-                            RolId = 1,
-                            PermisoCodigo = "rubros.ver"
-                        },
-                        new
-                        {
-                            RolId = 1,
-                            PermisoCodigo = "rubros.editar"
-                        },
-                        new
-                        {
-                            RolId = 1,
-                            PermisoCodigo = "seguridad.usuarios"
-                        },
-                        new
-                        {
-                            RolId = 1,
-                            PermisoCodigo = "seguridad.roles"
+                            t.ExcludeFromMigrations();
                         });
                 });
 
@@ -324,57 +279,44 @@ namespace Crv4.Api.Datos.Migraciones
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
-                        .HasColumnName("id");
+                        .HasColumnName("IdSesion");
 
                     b.Property<DateTime>("CreadaEn")
-                        .HasPrecision(6)
-                        .HasColumnType("datetime(6)")
-                        .HasColumnName("creada_en");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("Dispositivo")
                         .HasMaxLength(250)
-                        .HasColumnType("varchar(250)")
-                        .HasColumnName("dispositivo");
+                        .HasColumnType("varchar(250)");
 
                     b.Property<DateTime>("ExpiraEn")
-                        .HasPrecision(6)
-                        .HasColumnType("datetime(6)")
-                        .HasColumnName("expira_en");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("Ip")
                         .HasMaxLength(45)
-                        .HasColumnType("varchar(45)")
-                        .HasColumnName("ip");
+                        .HasColumnType("varchar(45)");
 
                     b.Property<long?>("ReemplazadaPorId")
-                        .HasColumnType("bigint")
-                        .HasColumnName("reemplazada_por_id");
+                        .HasColumnType("bigint");
 
                     b.Property<DateTime?>("RevocadaEn")
-                        .HasPrecision(6)
-                        .HasColumnType("datetime(6)")
-                        .HasColumnName("revocada_en");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("TokenHash")
                         .IsRequired()
                         .HasMaxLength(64)
                         .HasColumnType("char(64)")
-                        .HasColumnName("token_hash")
                         .IsFixedLength();
 
                     b.Property<int>("UsuarioId")
                         .HasColumnType("int")
-                        .HasColumnName("usuario_id");
+                        .HasColumnName("IdUsuario");
 
-                    b.HasKey("Id")
-                        .HasName("pk_sesiones");
+                    b.HasKey("Id");
 
                     b.HasIndex("TokenHash")
-                        .IsUnique()
-                        .HasDatabaseName("ix_sesiones_token_hash");
+                        .IsUnique();
 
-                    b.HasIndex("UsuarioId", "RevocadaEn")
-                        .HasDatabaseName("ix_sesiones_usuario_id_revocada_en");
+                    b.HasIndex("UsuarioId", "RevocadaEn");
 
                     b.ToTable("sesiones", (string)null);
                 });
@@ -384,93 +326,90 @@ namespace Crv4.Api.Datos.Migraciones
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
-                        .HasColumnName("id");
+                        .HasColumnName("IdUsuario");
 
                     b.Property<bool>("Activo")
-                        .HasColumnType("tinyint(1)")
-                        .HasColumnName("activo");
-
-                    b.Property<DateTime>("ActualizadoEn")
-                        .HasPrecision(6)
-                        .HasColumnType("datetime(6)")
-                        .HasColumnName("actualizado_en");
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<DateTime?>("BloqueadoHasta")
-                        .HasPrecision(6)
-                        .HasColumnType("datetime(6)")
-                        .HasColumnName("bloqueado_hasta");
-
-                    b.Property<DateTime>("CreadoEn")
-                        .HasPrecision(6)
-                        .HasColumnType("datetime(6)")
-                        .HasColumnName("creado_en");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<bool>("DebeCambiarPassword")
-                        .HasColumnType("tinyint(1)")
-                        .HasColumnName("debe_cambiar_password");
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Email")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("FechaAlta")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime(6)")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<int>("IntentosFallidos")
-                        .HasColumnType("int")
-                        .HasColumnName("intentos_fallidos");
+                        .HasColumnType("int");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
-                        .HasMaxLength(120)
-                        .HasColumnType("varchar(120)")
-                        .HasColumnName("nombre");
+                        .HasColumnType("longtext")
+                        .HasColumnName("NombreCompleto");
 
                     b.Property<string>("NombreUsuario")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("nombre_usuario");
+                        .HasColumnType("varchar(255)");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("varchar(200)")
-                        .HasColumnName("password_hash");
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime?>("UltimoIngreso")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("UltimoLogin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NombreUsuario")
+                        .IsUnique();
+
+                    b.ToTable("usuarios_sistema", null, t =>
+                        {
+                            t.ExcludeFromMigrations();
+                        });
+                });
+
+            modelBuilder.Entity("Crv4.Api.Modulos.Seguridad.UsuarioRol", b =>
+                {
+                    b.Property<int>("UsuarioId")
+                        .HasColumnType("int")
+                        .HasColumnName("IdUsuario");
 
                     b.Property<int>("RolId")
                         .HasColumnType("int")
-                        .HasColumnName("rol_id");
+                        .HasColumnName("IdRol");
 
-                    b.Property<DateTime?>("UltimoIngreso")
-                        .HasPrecision(6)
-                        .HasColumnType("datetime(6)")
-                        .HasColumnName("ultimo_ingreso");
+                    b.HasKey("UsuarioId", "RolId");
 
-                    b.HasKey("Id")
-                        .HasName("pk_usuarios");
+                    b.HasIndex("RolId");
 
-                    b.HasIndex("NombreUsuario")
-                        .IsUnique()
-                        .HasDatabaseName("ix_usuarios_nombre_usuario");
-
-                    b.HasIndex("RolId")
-                        .HasDatabaseName("ix_usuarios_rol_id");
-
-                    b.ToTable("usuarios", (string)null);
+                    b.ToTable("usuarios_roles", null, t =>
+                        {
+                            t.ExcludeFromMigrations();
+                        });
                 });
 
             modelBuilder.Entity("Crv4.Api.Modulos.Sistema.Numerador", b =>
                 {
                     b.Property<string>("Clave")
                         .HasMaxLength(40)
-                        .HasColumnType("varchar(40)")
-                        .HasColumnName("clave");
+                        .HasColumnType("varchar(40)");
 
                     b.Property<string>("Descripcion")
                         .HasMaxLength(200)
-                        .HasColumnType("varchar(200)")
-                        .HasColumnName("descripcion");
+                        .HasColumnType("varchar(200)");
 
                     b.Property<long>("UltimoNumero")
-                        .HasColumnType("bigint")
-                        .HasColumnName("ultimo_numero");
+                        .HasColumnType("bigint");
 
-                    b.HasKey("Clave")
-                        .HasName("pk_numeradores");
+                    b.HasKey("Clave");
 
                     b.ToTable("numeradores", (string)null);
 
@@ -478,32 +417,40 @@ namespace Crv4.Api.Datos.Migraciones
                         new
                         {
                             Clave = "ventas",
-                            Descripcion = "Número de venta",
+                            Descripcion = "Número de venta (facturas.IdFactura)",
                             UltimoNumero = 0L
                         },
                         new
                         {
                             Clave = "clientes",
-                            Descripcion = "Código de cliente",
+                            Descripcion = "Número de cliente (clientes.IdCliente)",
                             UltimoNumero = 0L
                         });
+                });
+
+            modelBuilder.Entity("Crv4.Api.Modulos.Rubros.Rubro", b =>
+                {
+                    b.HasOne("Crv4.Api.Modulos.Rubros.Rubro", "Padre")
+                        .WithMany()
+                        .HasForeignKey("IdPadre")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Padre");
                 });
 
             modelBuilder.Entity("Crv4.Api.Modulos.Seguridad.RolPermiso", b =>
                 {
                     b.HasOne("Crv4.Api.Modulos.Seguridad.Permiso", "Permiso")
                         .WithMany()
-                        .HasForeignKey("PermisoCodigo")
+                        .HasForeignKey("PermisoId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_roles_permisos_permisos_permiso_codigo");
+                        .IsRequired();
 
                     b.HasOne("Crv4.Api.Modulos.Seguridad.Rol", "Rol")
                         .WithMany("Permisos")
                         .HasForeignKey("RolId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_roles_permisos_roles_rol_id");
+                        .IsRequired();
 
                     b.Navigation("Permiso");
 
@@ -516,22 +463,28 @@ namespace Crv4.Api.Datos.Migraciones
                         .WithMany()
                         .HasForeignKey("UsuarioId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_sesiones_usuarios_usuario_id");
+                        .IsRequired();
 
                     b.Navigation("Usuario");
                 });
 
-            modelBuilder.Entity("Crv4.Api.Modulos.Seguridad.Usuario", b =>
+            modelBuilder.Entity("Crv4.Api.Modulos.Seguridad.UsuarioRol", b =>
                 {
                     b.HasOne("Crv4.Api.Modulos.Seguridad.Rol", "Rol")
                         .WithMany("Usuarios")
                         .HasForeignKey("RolId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_usuarios_roles_rol_id");
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Crv4.Api.Modulos.Seguridad.Usuario", "Usuario")
+                        .WithMany("Roles")
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Rol");
+
+                    b.Navigation("Usuario");
                 });
 
             modelBuilder.Entity("Crv4.Api.Modulos.Seguridad.Rol", b =>
@@ -539,6 +492,11 @@ namespace Crv4.Api.Datos.Migraciones
                     b.Navigation("Permisos");
 
                     b.Navigation("Usuarios");
+                });
+
+            modelBuilder.Entity("Crv4.Api.Modulos.Seguridad.Usuario", b =>
+                {
+                    b.Navigation("Roles");
                 });
 #pragma warning restore 612, 618
         }

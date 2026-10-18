@@ -12,6 +12,6 @@ public record CambiarPasswordSolicitud(
     [Required] string PasswordActual,
     [Required, MaxLength(128)] string PasswordNueva);
 
-public record UsuarioSesion(int Id, string NombreUsuario, string Nombre, string Rol, IReadOnlyList<string> Permisos, bool DebeCambiarPassword);
+public record UsuarioSesion(int Id, string NombreUsuario, string Nombre, IReadOnlyList<string> Roles, IReadOnlyList<string> Permisos, bool DebeCambiarPassword);
 
 public record SesionRespuesta(string TokenAcceso, DateTime AccesoExpiraEn, string TokenRenovacion, DateTime SesionExpiraEn, UsuarioSesion Usuario);

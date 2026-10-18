@@ -25,14 +25,14 @@ export function App() {
       <Suspense fallback={<div className="vacio">Cargando…</div>}>
         <Routes>
           <Route element={<AppLayout />}>
-            <Route index element={<ConPermiso permisos={[Permisos.InicioVer]}><InicioPage /></ConPermiso>} />
+            <Route index element={<InicioPage />} />
             <Route path="productos" element={<ConPermiso permisos={[Permisos.ProductosVer]}><EnConstruccion titulo="Productos" /></ConPermiso>} />
             <Route path="clientes" element={<ConPermiso permisos={[Permisos.ClientesVer]}><EnConstruccion titulo="Clientes" /></ConPermiso>} />
             <Route path="ventas" element={<ConPermiso permisos={[Permisos.VentasVer]}><EnConstruccion titulo="Ventas" /></ConPermiso>} />
-            <Route path="estadisticas" element={<ConPermiso permisos={[Permisos.EstadisticasVer]}><EnConstruccion titulo="Estadísticas" /></ConPermiso>} />
-            <Route path="control-ventas" element={<ConPermiso permisos={[Permisos.ControlVentasVer]}><EnConstruccion titulo="Control Ventas" /></ConPermiso>} />
+            <Route path="estadisticas" element={<ConPermiso permisos={[Permisos.ReportesVer]}><EnConstruccion titulo="Estadísticas" /></ConPermiso>} />
+            <Route path="control-ventas" element={<ConPermiso permisos={[Permisos.ReportesVer]}><EnConstruccion titulo="Control Ventas" /></ConPermiso>} />
             <Route path="rubros" element={<ConPermiso permisos={[Permisos.RubrosVer]}><RubrosPage /></ConPermiso>} />
-            <Route path="seguridad" element={<ConPermiso permisos={[Permisos.SeguridadUsuarios, Permisos.SeguridadRoles]}><SeguridadPage /></ConPermiso>} />
+            <Route path="seguridad" element={<ConPermiso permisos={[Permisos.UsuariosAdministrar]}><SeguridadPage /></ConPermiso>} />
             <Route path="*" element={<NoEncontrado />} />
           </Route>
         </Routes>

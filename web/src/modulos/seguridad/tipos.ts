@@ -1,9 +1,14 @@
+export interface RolResumen {
+  id: number
+  nombre: string
+}
+
 export interface UsuarioDto {
   id: number
   nombreUsuario: string
   nombre: string
-  rolId: number
-  rol: string
+  email: string | null
+  roles: RolResumen[]
   activo: boolean
   debeCambiarPassword: boolean
   bloqueado: boolean
@@ -14,7 +19,9 @@ export interface RolDto {
   id: number
   nombre: string
   descripcion: string | null
-  esSistema: boolean
+  activo: boolean
+  /** El rol Administrador tiene todos los permisos y no se edita. */
+  esAdministrador: boolean
   usuarios: number
   permisos: string[]
 }

@@ -3,7 +3,7 @@ import { KeyRound, Pencil, Plus, Unlock } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { api } from '../../api/cliente'
 import { useSesion } from '../../auth/SesionContexto'
-import { Aviso, Boton, Campo, Casilla, EstadoActivo, Modal, Selector, Tarjeta } from '../../ui/componentes'
+import { Aviso, Boton, Campo, Casilla, EstadoActivo, Modal, Tarjeta } from '../../ui/componentes'
 import type { RolDto, UsuarioDto } from './tipos'
 
 type Dialogo = { tipo: 'nuevo' } | { tipo: 'editar'; usuario: UsuarioDto } | { tipo: 'password'; usuario: UsuarioDto } | null
@@ -36,7 +36,7 @@ export function UsuariosPanel() {
             <tr>
               <th>Usuario</th>
               <th>Nombre</th>
-              <th>Rol</th>
+              <th>Roles</th>
               <th>Estado</th>
               <th>Último ingreso</th>
               <th />
@@ -46,8 +46,11 @@ export function UsuariosPanel() {
             {usuarios.data?.map((u) => (
               <tr key={u.id}>
                 <td>{u.nombreUsuario}</td>
-                <td>{u.nombre}</td>
-                <td>{u.rol}</td>
+                <td>
+                  {u.nombre}
+                  {u.email && <div className="texto-secundario">{u.email}</div>}
+                </td>
+                <td>{u.roles.map((r) => r.nombre).join(', ') || <span className="etiqueta etiqueta--aviso">Sin rol</span>}</td>
                 <td>
                   <EstadoActivo activo={u.activo} /> {u.bloqueado && <span className="etiqueta etiqueta--aviso">Bloqueado</span>}{' '}
                   {u.debeCambiarPassword && <span className="etiqueta etiqueta--aviso">Cambio de clave pendiente</span>}
@@ -98,9 +101,33 @@ function useGuardar<T>(fn: (datos: T) => Promise<unknown>, alTerminar: () => voi
   })
 }
 
+/** Casillas de roles. Los inactivos se muestran solo si el usuario ya los tiene. */
+function ElegirRoles({ roles, elegidos, disabled, alCambiar }: { roles: RolDto[]; elegidos: number[]; disabled?: boolean; alCambiar: (ids: number[]) => void }) {
+  return (
+    <fieldset className="formulario grupo-casillas" disabled={disabled}>
+      <legend className="campo__etiqueta">Roles</legend>
+      {roles
+        .filter((r) => r.activo || elegidos.includes(r.id))
+        .map((r) => (
+          <Casilla
+            key={r.id}
+            etiqueta={r.activo ? r.nombre : `${r.nombre} (inactivo)`}
+            checked={elegidos.includes(r.id)}
+            onChange={(e) => alCambiar(e.target.checked ? [...elegidos, r.id] : elegidos.filter((id) => id !== r.id))}
+          />
+        ))}
+    </fieldset>
+  )
+}
+
+const iguales = (a: number[], b: number[]) => a.length === b.length && a.every((x) => b.includes(x))
+const emailONulo = (email: string) => email.trim() || null
+
 function FormularioNuevo({ roles, alTerminar }: { roles: RolDto[]; alTerminar: () => void }) {
-  const [datos, setDatos] = useState({ nombreUsuario: '', nombre: '', rolId: (roles.find((r) => !r.esSistema) ?? roles[0])?.id ?? 0, passwordInicial: '' })
-  const guardar = useGuardar((d: typeof datos) => api.post('/api/seguridad/usuarios', d), alTerminar)
+  // Por defecto el primer rol común: dar Administrador tiene que ser una decisión explícita.
+  const inicial = roles.find((r) => r.activo && !r.esAdministrador)
+  const [datos, setDatos] = useState({ nombreUsuario: '', nombre: '', email: '', rolIds: inicial ? [inicial.id] : [], passwordInicial: '' })
+  const guardar = useGuardar((d: typeof datos) => api.post('/api/seguridad/usuarios', { ...d, email: emailONulo(d.email) }), alTerminar)
   const enviar = (e: FormEvent) => {
     e.preventDefault()
     guardar.mutate(datos)
@@ -110,13 +137,8 @@ function FormularioNuevo({ roles, alTerminar }: { roles: RolDto[]; alTerminar: (
       <Aviso>{guardar.error?.message}</Aviso>
       <Campo etiqueta="Usuario" value={datos.nombreUsuario} onChange={(e) => setDatos({ ...datos, nombreUsuario: e.target.value })} maxLength={50} required autoFocus />
       <Campo etiqueta="Nombre" value={datos.nombre} onChange={(e) => setDatos({ ...datos, nombre: e.target.value })} maxLength={120} required />
-      <Selector etiqueta="Rol" value={datos.rolId} onChange={(e) => setDatos({ ...datos, rolId: Number(e.target.value) })}>
-        {roles.map((r) => (
-          <option key={r.id} value={r.id}>
-            {r.nombre}
-          </option>
-        ))}
-      </Selector>
+      <Campo etiqueta="Email (opcional)" type="email" value={datos.email} onChange={(e) => setDatos({ ...datos, email: e.target.value })} maxLength={150} />
+      <ElegirRoles roles={roles} elegidos={datos.rolIds} alCambiar={(rolIds) => setDatos({ ...datos, rolIds })} />
       <Campo
         etiqueta="Contraseña inicial"
         type="password"
@@ -132,8 +154,9 @@ function FormularioNuevo({ roles, alTerminar }: { roles: RolDto[]; alTerminar: (
 }
 
 function FormularioEditar({ usuario, esYo, roles, alTerminar }: { usuario: UsuarioDto; esYo: boolean; roles: RolDto[]; alTerminar: () => void }) {
-  const [datos, setDatos] = useState({ nombre: usuario.nombre, rolId: usuario.rolId, activo: usuario.activo })
-  const guardar = useGuardar((d: typeof datos) => api.put(`/api/seguridad/usuarios/${usuario.id}`, d), alTerminar)
+  const rolesActuales = usuario.roles.map((r) => r.id)
+  const [datos, setDatos] = useState({ nombre: usuario.nombre, email: usuario.email ?? '', rolIds: rolesActuales, activo: usuario.activo })
+  const guardar = useGuardar((d: typeof datos) => api.put(`/api/seguridad/usuarios/${usuario.id}`, { ...d, email: emailONulo(d.email) }), alTerminar)
   const enviar = (e: FormEvent) => {
     e.preventDefault()
     guardar.mutate(datos)
@@ -143,15 +166,11 @@ function FormularioEditar({ usuario, esYo, roles, alTerminar }: { usuario: Usuar
       <Aviso>{guardar.error?.message}</Aviso>
       <Campo etiqueta="Usuario" value={usuario.nombreUsuario} disabled />
       <Campo etiqueta="Nombre" value={datos.nombre} onChange={(e) => setDatos({ ...datos, nombre: e.target.value })} maxLength={120} required autoFocus />
-      <Selector etiqueta="Rol" value={datos.rolId} disabled={esYo} onChange={(e) => setDatos({ ...datos, rolId: Number(e.target.value) })}>
-        {roles.map((r) => (
-          <option key={r.id} value={r.id}>
-            {r.nombre}
-          </option>
-        ))}
-      </Selector>
+      <Campo etiqueta="Email (opcional)" type="email" value={datos.email} onChange={(e) => setDatos({ ...datos, email: e.target.value })} maxLength={150} />
+      <ElegirRoles roles={roles} elegidos={datos.rolIds} disabled={esYo} alCambiar={(rolIds) => setDatos({ ...datos, rolIds })} />
       <Casilla etiqueta="Activo" checked={datos.activo} disabled={esYo} onChange={(e) => setDatos({ ...datos, activo: e.target.checked })} />
-      {(datos.rolId !== usuario.rolId || datos.activo !== usuario.activo) && (
+      {esYo && <Aviso tipo="info">Tus propios roles y tu estado los cambia otro administrador.</Aviso>}
+      {(!iguales(datos.rolIds, rolesActuales) || datos.activo !== usuario.activo) && (
         <Aviso tipo="info">Al guardar se cierran las sesiones abiertas de este usuario.</Aviso>
       )}
       <Acciones pendiente={guardar.isPending} alCancelar={alTerminar} />

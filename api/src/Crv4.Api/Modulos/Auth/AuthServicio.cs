@@ -17,11 +17,14 @@ public class AuthServicio(
 {
     private const string CredencialesInvalidas = "Usuario o contraseña incorrectos.";
 
+    // Hora local del servidor, como el resto de las fechas de crv4_datos.
+    private DateTime Ahora => reloj.GetLocalNow().DateTime;
+
     public async Task<SesionRespuesta> LoginAsync(LoginSolicitud solicitud, string? ip, string? dispositivo, CancellationToken ct)
     {
-        var ahora = reloj.GetUtcNow().UtcDateTime;
+        var ahora = Ahora;
         var nombre = solicitud.Usuario.Trim();
-        var usuario = await db.Usuarios.Include(u => u.Rol).FirstOrDefaultAsync(u => u.NombreUsuario == nombre, ct);
+        var usuario = await db.Usuarios.FirstOrDefaultAsync(u => u.NombreUsuario == nombre, ct);
 
         if (usuario is null)
         {
@@ -70,11 +73,10 @@ public class AuthServicio(
 
     public async Task<SesionRespuesta> RenovarAsync(string tokenRenovacion, string? ip, CancellationToken ct)
     {
-        var ahora = reloj.GetUtcNow().UtcDateTime;
+        var ahora = Ahora;
         var hash = TokenServicio.Hash(tokenRenovacion);
-        var sesion = await db.Sesiones.Include(s => s.Usuario).ThenInclude(u => u.Rol)
-            .FirstOrDefaultAsync(s => s.TokenHash == hash, ct)
-            ?? throw SesionVencida();
+        var sesion = await db.Sesiones.Include(s => s.Usuario).FirstOrDefaultAsync(s => s.TokenHash == hash, ct)
+                     ?? throw SesionVencida();
 
         if (sesion.RevocadaEn is not null)
         {
@@ -112,13 +114,14 @@ public class AuthServicio(
     public async Task SalirAsync(string tokenRenovacion, CancellationToken ct)
     {
         var hash = TokenServicio.Hash(tokenRenovacion);
+        var ahora = Ahora;
         await db.Sesiones.Where(s => s.TokenHash == hash && s.RevocadaEn == null)
-            .ExecuteUpdateAsync(s => s.SetProperty(x => x.RevocadaEn, reloj.GetUtcNow().UtcDateTime), ct);
+            .ExecuteUpdateAsync(s => s.SetProperty(x => x.RevocadaEn, ahora), ct);
     }
 
     public async Task<SesionRespuesta> CambiarPasswordAsync(int usuarioId, CambiarPasswordSolicitud solicitud, string? ip, string? dispositivo, CancellationToken ct)
     {
-        var usuario = await db.Usuarios.Include(u => u.Rol).FirstAsync(u => u.Id == usuarioId, ct);
+        var usuario = await db.Usuarios.FirstAsync(u => u.Id == usuarioId, ct);
         if (!passwords.Verificar(usuario, solicitud.PasswordActual, out _))
             throw new ErrorNegocio("La contraseña actual no es correcta.");
         if (solicitud.PasswordActual == solicitud.PasswordNueva)
@@ -137,25 +140,40 @@ public class AuthServicio(
 
     public async Task<UsuarioSesion> ObtenerUsuarioAsync(int usuarioId, CancellationToken ct)
     {
-        var usuario = await db.Usuarios.Include(u => u.Rol).FirstAsync(u => u.Id == usuarioId, ct);
-        return new UsuarioSesion(usuario.Id, usuario.NombreUsuario, usuario.Nombre, usuario.Rol.Nombre,
-            await PermisosDeRolAsync(usuario.RolId, ct), usuario.DebeCambiarPassword);
+        var usuario = await db.Usuarios.FirstAsync(u => u.Id == usuarioId, ct);
+        var (roles, permisos) = await AccesosAsync(usuario.Id, ct);
+        return new UsuarioSesion(usuario.Id, usuario.NombreUsuario, usuario.Nombre, roles, permisos, usuario.DebeCambiarPassword);
     }
 
-    public Task RevocarTodasAsync(int usuarioId, CancellationToken ct) =>
-        db.Sesiones.Where(s => s.UsuarioId == usuarioId && s.RevocadaEn == null)
-            .ExecuteUpdateAsync(s => s.SetProperty(x => x.RevocadaEn, reloj.GetUtcNow().UtcDateTime), ct);
+    public Task RevocarTodasAsync(int usuarioId, CancellationToken ct)
+    {
+        var ahora = Ahora;
+        return db.Sesiones.Where(s => s.UsuarioId == usuarioId && s.RevocadaEn == null)
+            .ExecuteUpdateAsync(s => s.SetProperty(x => x.RevocadaEn, ahora), ct);
+    }
+
+    /// <summary>Roles activos del usuario y la unión de sus permisos. El Administrador tiene todos.</summary>
+    public async Task<(IReadOnlyList<string> Roles, IReadOnlyList<string> Permisos)> AccesosAsync(int usuarioId, CancellationToken ct)
+    {
+        var roles = await db.UsuariosRoles.Where(ur => ur.UsuarioId == usuarioId && ur.Rol.Activo)
+            .Select(ur => ur.Rol.Nombre).OrderBy(n => n).ToListAsync(ct);
+
+        var permisos = roles.Contains(Rol.NombreAdministrador)
+            ? await db.Permisos.Where(p => p.Activo).Select(p => p.Codigo).ToListAsync(ct)
+            : await db.UsuariosRoles.Where(ur => ur.UsuarioId == usuarioId && ur.Rol.Activo)
+                .SelectMany(ur => ur.Rol.Permisos).Where(rp => rp.Permiso.Activo)
+                .Select(rp => rp.Permiso.Codigo).Distinct().ToListAsync(ct);
+        permisos.Sort(StringComparer.Ordinal);
+        return (roles, permisos);
+    }
 
     private async Task<SesionRespuesta> ArmarRespuestaAsync(Usuario usuario, Sesion sesion, string tokenRenovacion, CancellationToken ct)
     {
-        var permisos = await PermisosDeRolAsync(usuario.RolId, ct);
-        var acceso = tokens.CrearTokenAcceso(usuario, permisos, sesion.Id);
-        var datos = new UsuarioSesion(usuario.Id, usuario.NombreUsuario, usuario.Nombre, usuario.Rol.Nombre, permisos, usuario.DebeCambiarPassword);
+        var (roles, permisos) = await AccesosAsync(usuario.Id, ct);
+        var acceso = tokens.CrearTokenAcceso(usuario, roles, permisos, sesion.Id);
+        var datos = new UsuarioSesion(usuario.Id, usuario.NombreUsuario, usuario.Nombre, roles, permisos, usuario.DebeCambiarPassword);
         return new SesionRespuesta(acceso.Token, acceso.ExpiraEn, tokenRenovacion, sesion.ExpiraEn, datos);
     }
-
-    private async Task<IReadOnlyList<string>> PermisosDeRolAsync(int rolId, CancellationToken ct) =>
-        await db.RolPermisos.Where(rp => rp.RolId == rolId).Select(rp => rp.PermisoCodigo).OrderBy(c => c).ToListAsync(ct);
 
     private static ErrorNegocio SesionVencida() =>
         new("La sesión venció. Ingresá de nuevo.", StatusCodes.Status401Unauthorized);

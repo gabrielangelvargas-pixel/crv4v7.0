@@ -112,7 +112,7 @@ public class AuthPruebas(ApiFixture api)
         var cliente = api.Cliente((await api.LoginAsync("login_lectura")).TokenAcceso);
 
         Assert.Equal(HttpStatusCode.OK, (await cliente.GetAsync("/api/rubros")).StatusCode);
-        var crear = await cliente.PostAsJsonAsync("/api/rubros", new { nombre = "No debería", orden = 0 });
+        var crear = await cliente.PostAsJsonAsync("/api/rubros", new { codigo = "ND", nombre = "No debería", orden = 0 });
         Assert.Equal(HttpStatusCode.Forbidden, crear.StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden, (await cliente.GetAsync("/api/seguridad/usuarios")).StatusCode);
     }
@@ -125,7 +125,7 @@ public class AuthPruebas(ApiFixture api)
         var empleado = await api.CrearUsuarioAsync("login_empleado");
         var sesionEmpleado = await api.LoginAsync("login_empleado");
 
-        var r = await admin.PutAsJsonAsync($"/api/seguridad/usuarios/{empleado.Id}", new { nombre = "Empleado", rolId = empleado.RolId, activo = false });
+        var r = await admin.PutAsJsonAsync($"/api/seguridad/usuarios/{empleado.Id}", new { nombre = "Empleado", rolIds = new[] { empleado.Roles[0].RolId }, activo = false });
         Assert.Equal(HttpStatusCode.NoContent, r.StatusCode);
 
         var renovar = await api.CreateClient().PostAsJsonAsync("/api/auth/renovar", new { tokenRenovacion = sesionEmpleado.TokenRenovacion });

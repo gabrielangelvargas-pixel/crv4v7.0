@@ -47,7 +47,7 @@ export function ProveedorSesion({ children }: { children: ReactNode }) {
   }, [])
 
   const tiene = useCallback(
-    (...permisos: Permiso[]) => !!usuario && permisos.some((p) => usuario.permisos.includes(p)),
+    (...permisos: Permiso[]) => !!usuario && (permisos.length === 0 || permisos.some((p) => usuario.permisos.includes(p))),
     [usuario],
   )
 

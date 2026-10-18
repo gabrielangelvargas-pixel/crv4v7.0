@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import { useSesion } from './SesionContexto'
-import { Aviso, Boton, Campo } from '../ui/componentes'
+import { Aviso, Boton, Campo, Selector } from '../ui/componentes'
+import { elegirServidor, obtenerConfiguracion } from '../config'
+import { sesionAlmacenada } from '../api/cliente'
 import '../layout/layout.css'
 
 export function LoginPage() {
@@ -44,8 +46,32 @@ export function LoginPage() {
         <Boton type="submit" variante="primario" disabled={enviando}>
           {enviando ? 'Ingresando…' : 'Ingresar'}
         </Boton>
+        <ElegirServidor />
         <div className="acceso__pie">Versión {__VERSION__}</div>
       </form>
     </div>
+  )
+}
+
+/** Solo aparece si config.json tiene más de un servidor. */
+function ElegirServidor() {
+  const { servidores, apiUrl } = obtenerConfiguracion()
+  if (servidores.length < 2) return null
+  return (
+    <Selector
+      etiqueta="Servidor"
+      value={apiUrl}
+      onChange={(e) => {
+        elegirServidor(e.target.value)
+        sesionAlmacenada.borrar()
+        location.reload()
+      }}
+    >
+      {servidores.map((s) => (
+        <option key={s.apiUrl} value={s.apiUrl}>
+          {s.nombre} ({s.apiUrl.replace(/^https?:\/\//, '')})
+        </option>
+      ))}
+    </Selector>
   )
 }

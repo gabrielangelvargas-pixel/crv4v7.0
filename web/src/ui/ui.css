@@ -37,6 +37,8 @@
 .campo--check { display: flex; align-items: center; gap: 8px; }
 .formulario { display: grid; gap: 14px; }
 .formulario__acciones { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+.grupo-casillas { border: 1px solid var(--color-borde); border-radius: var(--radio); padding: 12px; gap: 6px; margin: 0; min-width: 0; }
+.texto-secundario { font-size: 13px; color: var(--color-texto-suave); }
 
 /* ---------- Tarjetas ---------- */
 .tarjeta {
