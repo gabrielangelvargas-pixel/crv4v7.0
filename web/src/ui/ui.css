@@ -97,4 +97,5 @@
 .pestana[aria-selected='true'] { color: var(--color-marca); border-bottom-color: var(--color-marca); }
 
 /* Texto que se oculta en pantallas chicas (por ejemplo, la etiqueta de un botón con ícono). */
-@media (max-width: 640px) { .solo-ancho { display: none; } }
+@media (min-width: 641px) { .solo-movil { display: none !important; } }
+@media (max-width: 640px) { .solo-ancho { display: none !important; } }

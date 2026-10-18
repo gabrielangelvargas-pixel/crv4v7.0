@@ -1,5 +1,5 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ChevronLeft, ChevronRight, Copy, Pencil, Plus, Trash2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Copy, Pencil, Plus, SlidersHorizontal, Trash2 } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
 import { api } from '../../api/cliente'
 import { Permisos } from '../../auth/permisos'
@@ -97,6 +97,7 @@ export function ProductosPage() {
   const [estado, setEstado] = useState<Estado>('activos')
   const [pagina, setPagina] = useState(1)
   const [edicion, setEdicion] = useState<Edicion | null>(null)
+  const [verFiltros, setVerFiltros] = useState(false)
 
   // Espera a que se deje de escribir para no consultar con cada tecla.
   useEffect(() => {
@@ -122,10 +123,13 @@ export function ProductosPage() {
   const opcionesRubro = aplanar(armarArbol(rubros.data ?? []))
   const datos = productos.data
   const paginas = datos ? Math.max(1, Math.ceil(datos.total / datos.tamanoPagina)) : 1
-  const filtrar = <T,>(cambiar: (valor: T) => void) => (valor: T) => {
-    cambiar(valor)
-    setPagina(1)
-  }
+  const filtrosActivos = [idRubro, idProveedor, estado !== 'activos'].filter(Boolean).length
+  const filtrar =
+    <T,>(cambiar: (valor: T) => void) =>
+    (valor: T) => {
+      cambiar(valor)
+      setPagina(1)
+    }
 
   async function duplicar(p: Producto) {
     const detalle = await api.get<Producto>(`/api/productos/${encodeURIComponent(p.codigo)}`)
@@ -143,31 +147,47 @@ export function ProductosPage() {
             value={buscar}
             onChange={(e) => filtrar(setBuscar)(e.target.value)}
           />
-          <Selector etiqueta="Rubro" value={idRubro} onChange={(e) => filtrar(setIdRubro)(e.target.value)}>
-            <option value="">Todos los rubros</option>
-            {opcionesRubro.map(({ rubro: r, nivel }) => (
-              <option key={r.id} value={r.codigo}>
-                {'   '.repeat(nivel)}
-                {r.codigo} · {r.nombre}
-              </option>
-            ))}
-          </Selector>
-          <Selector etiqueta="Proveedor" value={idProveedor} onChange={(e) => filtrar(setIdProveedor)(e.target.value)}>
-            <option value="">Todos los proveedores</option>
-            {(proveedores.data ?? []).map((p) => (
-              <option key={p.codigo} value={p.codigo}>
-                {p.nombre}
-              </option>
-            ))}
-          </Selector>
-          <Selector etiqueta="Estado" value={estado} onChange={(e) => filtrar(setEstado)(e.target.value as Estado)}>
-            <option value="activos">Activos</option>
-            <option value="todos">Todos</option>
-            <option value="inactivos">Inactivos</option>
-          </Selector>
+          <Boton
+            className="solo-movil filtros-productos__alternar"
+            aria-expanded={verFiltros}
+            aria-label="Filtros"
+            onClick={() => setVerFiltros(!verFiltros)}
+          >
+            <SlidersHorizontal size={16} />
+            {filtrosActivos > 0 && <span className="filtros-productos__cantidad">{filtrosActivos}</span>}
+          </Boton>
+          <div className={`filtros-productos__extra${verFiltros ? ' filtros-productos__extra--abierto' : ''}`}>
+            <Selector etiqueta="Rubro" value={idRubro} onChange={(e) => filtrar(setIdRubro)(e.target.value)}>
+              <option value="">Todos los rubros</option>
+              {opcionesRubro.map(({ rubro: r, nivel }) => (
+                <option key={r.id} value={r.codigo}>
+                  {'   '.repeat(nivel)}
+                  {r.codigo} · {r.nombre}
+                </option>
+              ))}
+            </Selector>
+            <Selector etiqueta="Proveedor" value={idProveedor} onChange={(e) => filtrar(setIdProveedor)(e.target.value)}>
+              <option value="">Todos los proveedores</option>
+              {(proveedores.data ?? []).map((p) => (
+                <option key={p.codigo} value={p.codigo}>
+                  {p.nombre}
+                </option>
+              ))}
+            </Selector>
+            <Selector etiqueta="Estado" value={estado} onChange={(e) => filtrar(setEstado)(e.target.value as Estado)}>
+              <option value="activos">Activos</option>
+              <option value="todos">Todos</option>
+              <option value="inactivos">Inactivos</option>
+            </Selector>
+          </div>
           {puedeCrear && (
-            <Boton variante="primario" className="filtros-productos__nuevo" onClick={() => setEdicion({ modo: 'nuevo', formulario: vacio })}>
-              <Plus size={16} /> Nuevo producto
+            <Boton
+              variante="primario"
+              className="filtros-productos__nuevo"
+              aria-label="Nuevo producto"
+              onClick={() => setEdicion({ modo: 'nuevo', formulario: vacio })}
+            >
+              <Plus size={16} /> <span className="solo-ancho">Nuevo producto</span>
             </Boton>
           )}
         </div>
@@ -178,7 +198,9 @@ export function ProductosPage() {
               Productos encontrados: <strong>{datos.total.toLocaleString('es-AR')}</strong>
             </span>
             {paginas > 1 && (
-              <Paginador pagina={datos.pagina} paginas={paginas} cambiar={setPagina} />
+              <div className="solo-ancho">
+                <Paginador pagina={datos.pagina} paginas={paginas} cambiar={setPagina} />
+              </div>
             )}
           </div>
         )}
@@ -197,26 +219,46 @@ export function ProductosPage() {
             </thead>
             <tbody>
               {datos?.items.map((p) => (
-                <tr key={p.codigo}>
-                  <td className="tabla-productos__codigo" data-etiqueta="Código">{p.codigo}</td>
+                <tr key={p.codigo} className={p.activo ? undefined : 'tabla-productos__inactivo'}>
+                  <td className="tabla-productos__codigo" data-etiqueta="Código">
+                    {p.codigo}
+                  </td>
                   <td className="tabla-productos__descripcion" data-etiqueta="Descripción">
                     <div className="tabla-productos__nombre">{p.descripcion.trim()}</div>
                     <div className="tabla-productos__detalle">
                       <span title="Rubro">{p.rubro}</span>
                       <span title="Proveedor">{p.proveedor}</span>
-                      {verReferencia && p.referenciaProveedor?.trim() && <span title="Referencia del proveedor">Ref. {p.referenciaProveedor.trim()}</span>}
+                      {verReferencia && p.referenciaProveedor?.trim() && (
+                        <span title="Referencia del proveedor">Ref. {p.referenciaProveedor.trim()}</span>
+                      )}
                     </div>
                   </td>
-                  {verCostos && <td className="numero" data-etiqueta="Compra">{moneda.format(p.precioCompra ?? 0)}</td>}
-                  <td className="numero tabla-productos__venta" data-etiqueta="Venta">{moneda.format(p.precioVenta)}</td>
-                  <td className="numero" data-etiqueta="Oferta">{p.precioOferta ? moneda.format(p.precioOferta) : '-'}</td>
-                  <td data-etiqueta="Estado">
+                  {verCostos && (
+                    <td className="numero tabla-productos__compra" data-etiqueta="Compra">
+                      {moneda.format(p.precioCompra ?? 0)}
+                    </td>
+                  )}
+                  <td className="numero tabla-productos__venta" data-etiqueta="Venta">
+                    {moneda.format(p.precioVenta)}
+                  </td>
+                  <td
+                    className={`numero tabla-productos__oferta${p.precioOferta ? '' : ' tabla-productos__oferta--sin'}`}
+                    data-etiqueta="Oferta"
+                  >
+                    {p.precioOferta ? moneda.format(p.precioOferta) : '-'}
+                  </td>
+                  <td className="tabla-productos__estado" data-etiqueta="Estado">
                     <EstadoActivo activo={p.activo} />
                   </td>
                   {(puedeEditar || puedeCrear) && (
                     <td className="acciones">
                       {puedeEditar && (
-                        <Boton chico onClick={() => setEdicion({ modo: 'editar', codigo: p.codigo })} aria-label={`Editar ${p.descripcion}`} title="Editar">
+                        <Boton
+                          chico
+                          onClick={() => setEdicion({ modo: 'editar', codigo: p.codigo })}
+                          aria-label={`Editar ${p.descripcion}`}
+                          title="Editar"
+                        >
                           <Pencil size={14} /> <span className="solo-ancho">Editar</span>
                         </Boton>
                       )}{' '}
@@ -390,7 +432,13 @@ function FormularioProducto({
           <Casilla etiqueta="Activo" checked={f.activo} onChange={(e) => poner('activo', e.target.checked)} />
         </div>
         <div className="fp-todo">
-          <Campo etiqueta="Descripción" value={f.descripcion} onChange={(e) => poner('descripcion', e.target.value)} maxLength={100} required />
+          <Campo
+            etiqueta="Descripción"
+            value={f.descripcion}
+            onChange={(e) => poner('descripcion', e.target.value)}
+            maxLength={100}
+            required
+          />
         </div>
         <div className="fp-3">
           <Selector etiqueta="Proveedor" value={f.idProveedor} onChange={(e) => poner('idProveedor', e.target.value)} required>
@@ -404,7 +452,12 @@ function FormularioProducto({
         </div>
         {verReferencia && (
           <div className="fp-3">
-            <Campo etiqueta="Referencia del proveedor" value={f.referenciaProveedor} onChange={(e) => poner('referenciaProveedor', e.target.value)} maxLength={45} />
+            <Campo
+              etiqueta="Referencia del proveedor"
+              value={f.referenciaProveedor}
+              onChange={(e) => poner('referenciaProveedor', e.target.value)}
+              maxLength={45}
+            />
           </div>
         )}
         <div className="fp-todo">
@@ -419,7 +472,15 @@ function FormularioProducto({
           </Selector>
         </div>
         <div className="fp-2">
-          <Campo etiqueta="Precio de compra" type="number" min="0" step="0.01" value={f.precioCompra} onChange={(e) => ponerPrecio('precioCompra', e.target.value)} required />
+          <Campo
+            etiqueta="Precio de compra"
+            type="number"
+            min="0"
+            step="0.01"
+            value={f.precioCompra}
+            onChange={(e) => ponerPrecio('precioCompra', e.target.value)}
+            required
+          />
         </div>
         <div className="fp-2">
           <Campo
@@ -436,23 +497,61 @@ function FormularioProducto({
           <Campo etiqueta="Costo" value={moneda.format(costo)} readOnly tabIndex={-1} />
         </div>
         <div className="fp-2">
-          <Campo etiqueta="Utilidad %" type="number" step="0.001" value={f.utilidad} onChange={(e) => ponerPrecio('utilidad', e.target.value)} />
+          <Campo
+            etiqueta="Utilidad %"
+            type="number"
+            step="0.001"
+            value={f.utilidad}
+            onChange={(e) => ponerPrecio('utilidad', e.target.value)}
+          />
         </div>
         <div className="fp-2">
-          <Campo etiqueta="Precio de venta" type="number" min="0" step="0.01" value={f.precioVenta} onChange={(e) => ponerPrecio('precioVenta', e.target.value)} required />
+          <Campo
+            etiqueta="Precio de venta"
+            type="number"
+            min="0"
+            step="0.01"
+            value={f.precioVenta}
+            onChange={(e) => ponerPrecio('precioVenta', e.target.value)}
+            required
+          />
         </div>
         <div className="fp-2">
-          <Campo etiqueta="Precio de oferta" type="number" min="0" step="0.01" value={f.precioOferta} onChange={(e) => poner('precioOferta', e.target.value)} />
+          <Campo
+            etiqueta="Precio de oferta"
+            type="number"
+            min="0"
+            step="0.01"
+            value={f.precioOferta}
+            onChange={(e) => poner('precioOferta', e.target.value)}
+          />
         </div>
         <div className="fp-3">
-          <Campo etiqueta="Oferta desde" type="datetime-local" value={f.fechaInicioOferta} onChange={(e) => poner('fechaInicioOferta', e.target.value)} />
+          <Campo
+            etiqueta="Oferta desde"
+            type="datetime-local"
+            value={f.fechaInicioOferta}
+            onChange={(e) => poner('fechaInicioOferta', e.target.value)}
+          />
         </div>
         <div className="fp-3">
-          <Campo etiqueta="Oferta hasta" type="datetime-local" value={f.fechaFinOferta} onChange={(e) => poner('fechaFinOferta', e.target.value)} />
+          <Campo
+            etiqueta="Oferta hasta"
+            type="datetime-local"
+            value={f.fechaFinOferta}
+            onChange={(e) => poner('fechaFinOferta', e.target.value)}
+          />
         </div>
         <div className="fp-todo fp-imagen">
-          <Campo etiqueta="Imagen (dirección web)" value={f.imagenPrincipal} onChange={(e) => poner('imagenPrincipal', e.target.value)} maxLength={255} />
-          <div className="fp-imagen__vista">{f.imagenPrincipal ? <img key={f.imagenPrincipal} src={f.imagenPrincipal} alt="" /> : <span>Sin imagen</span>}</div>
+          <Campo
+            etiqueta="Imagen (dirección web)"
+            value={f.imagenPrincipal}
+            onChange={(e) => poner('imagenPrincipal', e.target.value)}
+            maxLength={255}
+          />
+          <div className="fp-imagen__vista">
+            {f.imagenPrincipal ? <img key={f.imagenPrincipal} src={f.imagenPrincipal} alt="" /> : <span>Sin imagen</span>}
+          </div>
         </div>
       </div>
       {confirmarBorrado ? (
