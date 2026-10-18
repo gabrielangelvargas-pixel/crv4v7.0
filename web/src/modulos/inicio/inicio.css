@@ -10,6 +10,13 @@
 .filtros .campo { min-width: 120px; }
 .grafico-vacio { display: grid; place-items: center; min-height: 220px; border: 1px dashed var(--color-borde-fuerte); border-radius: var(--radio); color: var(--color-texto-suave); text-align: center; padding: 16px; }
 
+/* Reloj para los usuarios que no son administradores. */
+.reloj { min-height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 24px 12px; text-align: center; }
+.reloj__saludo { font-size: 20px; font-weight: 600; color: var(--color-texto-suave); }
+.reloj__hora { font-size: clamp(72px, 18vw, 180px); font-weight: 800; line-height: 1; letter-spacing: -0.02em; color: var(--color-marca-oscuro); font-variant-numeric: tabular-nums; }
+.reloj__segundos { font-size: 0.32em; margin-left: 0.15em; color: var(--color-marca); vertical-align: top; }
+.reloj__fecha { font-size: 18px; color: var(--color-texto-suave); }
+
 @media (max-width: 520px) {
   .inicio-graficos { grid-template-columns: 1fr; }
 }

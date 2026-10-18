@@ -78,5 +78,11 @@ public class RubrosPruebas(ApiFixture api)
         var cliente = api.Cliente((await api.LoginAsync("inicio_ver")).TokenAcceso);
         var r = await cliente.GetAsync("/api/inicio/resumen");
         Assert.Equal(HttpStatusCode.OK, r.StatusCode);
+
+        // Quien no es administrador no ve los números del negocio.
+        var rol = await api.CrearRolAsync("Solo rubros inicio", Crv4.Api.Modulos.Seguridad.Permisos.RubrosVer);
+        await api.CrearUsuarioAsync("inicio_comun", rol);
+        var comun = api.Cliente((await api.LoginAsync("inicio_comun")).TokenAcceso);
+        Assert.Equal(HttpStatusCode.Forbidden, (await comun.GetAsync("/api/inicio/resumen")).StatusCode);
     }
 }
