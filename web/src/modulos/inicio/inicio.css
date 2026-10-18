@@ -1,0 +1,15 @@
+.inicio-tarjetas { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 12px; }
+.indicador { display: flex; flex-direction: column; gap: 14px; min-height: 160px; padding: 16px; }
+.indicador__titulo { display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--color-texto-suave); }
+.indicador__valor { font-size: 32px; font-weight: 800; }
+.indicador__pie { margin-top: auto; font-size: 13px; color: var(--color-texto-suave); }
+
+.inicio-graficos { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 12px; }
+.inicio-graficos .tarjeta__encabezado { align-items: flex-end; }
+.filtros { display: flex; gap: 8px; }
+.filtros .campo { min-width: 120px; }
+.grafico-vacio { display: grid; place-items: center; min-height: 220px; border: 1px dashed var(--color-borde-fuerte); border-radius: var(--radio); color: var(--color-texto-suave); text-align: center; padding: 16px; }
+
+@media (max-width: 520px) {
+  .inicio-graficos { grid-template-columns: 1fr; }
+}

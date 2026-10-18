@@ -1,0 +1,28 @@
+# Compila la API y corre las pruebas (incluidas las que usan MySQL) en cada cambio.
+name: API
+
+on:
+  push:
+    branches: [main]
+    paths: ['api/**', '.github/workflows/api.yml']
+  pull_request:
+    paths: ['api/**']
+
+jobs:
+  pruebas:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: solo-para-ci
+        ports: ['3306:3306']
+        options: --health-cmd="mysqladmin ping -psolo-para-ci" --health-interval=5s --health-retries=20
+    env:
+      CRV4_TEST_MYSQL: server=127.0.0.1;database=crv4_test;user=root;password=solo-para-ci
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - run: dotnet test api/Crv4.sln -c Release

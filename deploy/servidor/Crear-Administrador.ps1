@@ -1,0 +1,20 @@
+﻿<#
+.SYNOPSIS
+  En la PC servidor: crea el primer usuario administrador de CRV4 (o uno nuevo si se pierde el acceso).
+  Pide los datos por consola; la contraseña no queda guardada en ningún archivo.
+#>
+param(
+    [string]$Servidor = 'localhost',
+    [int]$Puerto = 3306,
+    [string]$Base = 'crv4_v7',
+    [string]$Usuario = 'crv4_api'
+)
+$ErrorActionPreference = 'Stop'
+. "$PSScriptRoot\Comun.ps1"
+Confirmar-Administrador
+
+$exe = Join-Path $CarpetaApi 'Crv4.Api.exe'
+$clave = Leer-Secreto "Contraseña de MySQL para $Usuario"
+$env:CRV4_ConnectionStrings__Principal = Armar-CadenaMySql $Servidor $Puerto $Base $Usuario $clave
+try { & $exe crear-admin }
+finally { Remove-Item Env:\CRV4_ConnectionStrings__Principal -ErrorAction SilentlyContinue }

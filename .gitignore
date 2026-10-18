@@ -1,0 +1,35 @@
+# .NET
+bin/
+obj/
+*.user
+.vs/
+publish/
+TestResults/
+
+# Node / Vite
+node_modules/
+dist/
+dev-dist/
+*.tsbuildinfo
+
+# Secretos y certificados: nunca al repositorio
+appsettings.*.local.json
+appsettings.Production.json
+*.pfx
+*.key
+*.pem
+.env
+.env.*
+
+# Paquetes y respaldos
+*.zip
+*.sql.gz
+respaldos/
+esquema*.sql
+
+# Editores / sistema
+.vscode/*
+!.vscode/extensions.json
+.idea/
+Thumbs.db
+.DS_Store
