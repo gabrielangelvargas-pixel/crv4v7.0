@@ -96,6 +96,6 @@
 .pestana { padding: 10px 14px; border: none; background: none; font-weight: 600; color: var(--color-texto-suave); cursor: pointer; border-bottom: 2px solid transparent; }
 .pestana[aria-selected='true'] { color: var(--color-marca); border-bottom-color: var(--color-marca); }
 
-/* Texto que se oculta en pantallas chicas (por ejemplo, la etiqueta de un botón con ícono). */
-@media (min-width: 641px) { .solo-movil { display: none !important; } }
-@media (max-width: 640px) { .solo-ancho { display: none !important; } }
+/* Hasta 1024 px (celulares y tablets) se usa el diseño compacto. */
+@media (min-width: 1025px) { .solo-movil { display: none !important; } }
+@media (max-width: 1024px) { .solo-ancho { display: none !important; } }

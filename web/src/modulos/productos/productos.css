@@ -47,8 +47,8 @@
   .filtros-productos__nuevo { grid-column: 1 / -1; justify-self: start; }
 }
 
-/* En el móvil: búsqueda con botón de filtros plegable y cada producto como una tarjeta compacta. */
-@media (max-width: 640px) {
+/* En celular y tablet: búsqueda con botón de filtros plegable y cada producto como una tarjeta compacta. */
+@media (max-width: 1024px) {
   .filtros-productos { grid-template-columns: 1fr auto auto; gap: 8px; margin-bottom: 8px; }
   .filtros-productos__busqueda { grid-column: auto; }
   .filtros-productos__nuevo { grid-column: auto; width: 40px; padding: 0; }
@@ -96,6 +96,14 @@
   .tabla-productos td.acciones .boton { width: 34px; min-height: 30px; padding: 0; }
   .tabla-productos__inactivo { opacity: 0.7; }
 
+}
+
+/* En tablets anchas las tarjetas van de a dos por fila. */
+@media (min-width: 860px) and (max-width: 1024px) {
+  .tabla-productos tbody { display: grid; grid-template-columns: 1fr 1fr; column-gap: 20px; }
+}
+
+@media (max-width: 640px) {
   .formulario-producto { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .fp-2 { grid-column: span 1; }
   .fp-3, .fp-casilla { grid-column: 1 / -1; }
