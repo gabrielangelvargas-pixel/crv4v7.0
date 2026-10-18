@@ -18,6 +18,10 @@
 .tabla .numero { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .tabla-productos__codigo { font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--color-texto-suave); font-weight: 600; }
 .tabla-productos__venta { font-weight: 700; }
+.tabla-productos__descripcion { width: 100%; min-width: 260px; }
+.tabla-productos__nombre { font-weight: 600; }
+.tabla-productos__detalle { display: flex; flex-wrap: wrap; gap: 2px 0; margin-top: 2px; font-size: 13px; color: var(--color-texto-suave); }
+.tabla-productos__detalle span + span::before { content: '·'; margin: 0 8px; }
 
 /* ---------- Formulario ---------- */
 .formulario-producto { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px 14px; }
@@ -56,7 +60,8 @@
   .tabla-productos td::before { content: attr(data-etiqueta); display: block; font-size: 11px; font-weight: 700; color: var(--color-texto-suave); text-transform: uppercase; letter-spacing: 0.02em; }
   .tabla-productos td.tabla-productos__codigo::before, .tabla-productos td.tabla-productos__descripcion::before, .tabla-productos td.acciones::before { content: none; }
   .tabla-productos__codigo { grid-column: 1; font-size: 13px; }
-  .tabla-productos__descripcion { grid-column: 1 / -1; order: -1; font-weight: 700; font-size: 15px !important; }
+  .tabla-productos__descripcion { grid-column: 1 / -1; order: -1; min-width: 0; }
+  .tabla-productos__nombre { font-weight: 700; font-size: 15px; }
   .tabla-productos td.acciones { grid-column: 1 / -1; text-align: left; padding-top: 6px; }
   .tabla-productos td.numero { text-align: left; }
 

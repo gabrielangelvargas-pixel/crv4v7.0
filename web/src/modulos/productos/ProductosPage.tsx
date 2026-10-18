@@ -189,9 +189,6 @@ export function ProductosPage() {
               <tr>
                 <th>Código</th>
                 <th>Descripción</th>
-                <th>Rubro</th>
-                <th>Proveedor</th>
-                {verReferencia && <th>Ref. proveedor</th>}
                 {verCostos && <th className="numero">Compra</th>}
                 <th className="numero">Venta</th>
                 <th className="numero">Oferta</th>
@@ -203,13 +200,17 @@ export function ProductosPage() {
               {datos?.items.map((p) => (
                 <tr key={p.codigo}>
                   <td className="tabla-productos__codigo" data-etiqueta="Código">{p.codigo}</td>
-                  <td className="tabla-productos__descripcion" data-etiqueta="Descripción">{p.descripcion.trim()}</td>
-                  <td data-etiqueta="Rubro">{p.rubro}</td>
-                  <td data-etiqueta="Proveedor">{p.proveedor}</td>
-                  {verReferencia && <td data-etiqueta="Ref. proveedor">{p.referenciaProveedor?.trim() || '-'}</td>}
+                  <td className="tabla-productos__descripcion" data-etiqueta="Descripción">
+                    <div className="tabla-productos__nombre">{p.descripcion.trim()}</div>
+                    <div className="tabla-productos__detalle">
+                      <span title="Rubro">{p.rubro}</span>
+                      <span title="Proveedor">{p.proveedor}</span>
+                      {verReferencia && p.referenciaProveedor?.trim() && <span title="Referencia del proveedor">Ref. {p.referenciaProveedor.trim()}</span>}
+                    </div>
+                  </td>
                   {verCostos && <td className="numero" data-etiqueta="Compra">{moneda.format(p.precioCompra ?? 0)}</td>}
                   <td className="numero tabla-productos__venta" data-etiqueta="Venta">{moneda.format(p.precioVenta)}</td>
-                  <td className="numero" data-etiqueta="Oferta">{p.precioOferta == null ? '-' : moneda.format(p.precioOferta)}</td>
+                  <td className="numero" data-etiqueta="Oferta">{p.precioOferta ? moneda.format(p.precioOferta) : '-'}</td>
                   <td data-etiqueta="Estado">
                     <EstadoActivo activo={p.activo} />
                   </td>
