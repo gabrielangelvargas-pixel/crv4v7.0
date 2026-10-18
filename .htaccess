@@ -1,0 +1,25 @@
+# CRV4 Mayorista 7.0 - configuración para Hostinger (Apache/LiteSpeed)
+
+# Forzar HTTPS
+RewriteEngine On
+RewriteCond %{HTTPS} !=on
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Rutas de la aplicación (React Router): todo lo que no sea un archivo va a index.html
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.html [L]
+
+<IfModule mod_headers.c>
+  # Estos archivos nunca se guardan en caché: así cada PC ve la versión nueva al abrir la web.
+  <FilesMatch "^(index\.html|sw\.js|registerSW\.js|config\.json|manifest\.webmanifest)$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+  </FilesMatch>
+  # Los archivos con hash en el nombre se pueden guardar para siempre.
+  <FilesMatch "\.(js|css|woff2|png|svg)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set X-Frame-Options "DENY"
+</IfModule>
