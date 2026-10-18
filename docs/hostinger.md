@@ -1,26 +1,27 @@
 # Publicación de la web en Hostinger
 
-Cada vez que se sube un cambio de `web/` a la rama `main`, GitHub Actions (`.github/workflows/web-hostinger.yml`)
-compila la web y deja el resultado en la rama **`hostinger`**. Hostinger copia esa rama a la carpeta del sitio.
+Hostinger toma el repositorio de GitHub y **compila la web él mismo** cada vez que se sube un cambio a `main`.
 
-## Configuración (una sola vez)
+## Configuración en hPanel
 
-1. Crear el repositorio en GitHub (privado) y subir este proyecto a `main`.
-2. En hPanel: **Sitios web > (el dominio o subdominio) > Avanzado > Git**.
-   - Repositorio: `git@github.com:<usuario>/<repositorio>.git`
-   - Rama: `hostinger`
-   - Directorio: vacío (para `public_html`) o la subcarpeta del subdominio.
-   - Si el repositorio es privado, copiar la **clave SSH** que muestra hPanel y agregarla en GitHub como *Deploy key* (solo lectura).
-3. En hPanel activar **Implementación automática** y copiar la URL del webhook.
-   En GitHub: **Settings > Webhooks > Add webhook**, pegar la URL, tipo `application/json`, evento *push*.
-4. Activar SSL para el dominio en hPanel.
-5. Poner ese dominio en el servidor con `Configurar-Secretos.ps1` (CORS).
+| Opción | Valor |
+|---|---|
+| Repositorio | `gabrielangelvargas-pixel/crv4v7.0` |
+| Preset | Vite |
+| Rama | `main` |
+| Node | 22.x |
+| Directorio root | `web` |
+| Compilación y salida | Predeterminado para Vite (`npm run build`, carpeta `dist`) |
+| Dominio actual | `https://white-eland-918813.hostingersite.com` |
+
+Si cambia el dominio (por ejemplo a uno propio), hay que actualizarlo en `Cors:OrigenesPermitidos` de
+`api/src/Crv4.Api/appsettings.json` o en el servidor con `Configurar-Secretos.ps1`.
 
 ## Cambiar la dirección de la API
 
-Editar `web/public/config.json` y subir el cambio. No hace falta recompilar nada a mano.
+Editar `web/public/config.json` y subir el cambio a `main`.
 
 ## Cómo llega la versión nueva a cada PC
 
 La web es una PWA con actualización automática: al abrirla busca la versión nueva, la instala y se recarga.
-`.htaccess` evita que `index.html`, `sw.js` y `config.json` queden en caché.
+`public/.htaccess` evita que `index.html`, `sw.js` y `config.json` queden en caché y manda todas las rutas a `index.html`.

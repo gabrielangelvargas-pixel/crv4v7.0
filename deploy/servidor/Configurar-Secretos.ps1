@@ -42,7 +42,7 @@ icacls $pfx /grant "NT SERVICE\${NombreServicio}:R" | Out-Null
 
 Write-Host '--- Web ---'
 $origenActual = if ($actual) { @($actual.Cors.OrigenesPermitidos)[0] } else { $null }
-$origen = Leer-Valor 'Dirección de la web en Hostinger (con https://)' $(if ($origenActual) { $origenActual } else { 'https://' })
+$origen = Leer-Valor 'Dirección de la web en Hostinger (con https://)' $(if ($origenActual) { $origenActual } else { 'https://white-eland-918813.hostingersite.com' })
 if ($origen -notmatch '^https://[^/]+$') { throw 'La dirección tiene que ser del tipo https://dominio.com, sin barra final.' }
 
 $claveJwt = if ($actual) { $actual.Jwt.Clave } else { $null }
