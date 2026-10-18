@@ -99,3 +99,6 @@
 /* Hasta 1024 px (celulares y tablets) se usa el diseño compacto. */
 @media (min-width: 1025px) { .solo-movil { display: none !important; } }
 @media (max-width: 1024px) { .solo-ancho { display: none !important; } }
+
+.paginador { display: flex; align-items: center; gap: 8px; }
+.tabla .numero { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }

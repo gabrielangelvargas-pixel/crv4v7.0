@@ -14,4 +14,6 @@ public class Cliente
     public string? TelefonoFijo { get; set; }
     public decimal? SaldoCuenta { get; set; }
     public DateTime FechaAlta { get; set; }
+    public Zona? Zona { get; set; }
+    public CondicionFiscal? CondicionFiscal { get; set; }
 }

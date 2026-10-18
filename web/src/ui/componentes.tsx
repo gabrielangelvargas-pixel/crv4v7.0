@@ -1,5 +1,13 @@
-import { X } from 'lucide-react'
-import { useEffect, useId, useRef, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes } from 'react'
+import { ChevronLeft, ChevronRight, X } from 'lucide-react'
+import {
+  useEffect,
+  useId,
+  useRef,
+  type ButtonHTMLAttributes,
+  type InputHTMLAttributes,
+  type ReactNode,
+  type SelectHTMLAttributes,
+} from 'react'
 import './ui.css'
 
 type Variante = 'primario' | 'peligro' | 'normal'
@@ -130,4 +138,20 @@ export function Modal({
 
 export function EstadoActivo({ activo }: { activo: boolean }) {
   return <span className={`etiqueta etiqueta--${activo ? 'activo' : 'inactivo'}`}>{activo ? 'Activo' : 'Inactivo'}</span>
+}
+
+export function Paginador({ pagina, paginas, cambiar }: { pagina: number; paginas: number; cambiar: (p: number) => void }) {
+  return (
+    <div className="paginador">
+      <Boton chico disabled={pagina <= 1} onClick={() => cambiar(pagina - 1)} aria-label="Página anterior">
+        <ChevronLeft size={16} />
+      </Boton>
+      <span>
+        Página {pagina} de {paginas}
+      </span>
+      <Boton chico disabled={pagina >= paginas} onClick={() => cambiar(pagina + 1)} aria-label="Página siguiente">
+        <ChevronRight size={16} />
+      </Boton>
+    </div>
+  )
 }

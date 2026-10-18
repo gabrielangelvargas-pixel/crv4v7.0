@@ -13,10 +13,8 @@
 .productos-resumen { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; font-size: 14px; color: var(--color-texto-suave); }
 .productos-resumen strong { color: var(--color-texto); }
 .productos-resumen--pie { justify-content: flex-end; margin: 12px 0 0; }
-.paginador { display: flex; align-items: center; gap: 8px; }
 
 /* ---------- Tabla ---------- */
-.tabla .numero { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .tabla-productos thead th { position: sticky; top: 0; z-index: 1; }
 .tabla-productos__codigo { font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--color-texto-suave); font-weight: 600; }
 .tabla-productos__venta { font-weight: 700; }

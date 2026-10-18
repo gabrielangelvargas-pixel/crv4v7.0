@@ -1,10 +1,10 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ChevronLeft, ChevronRight, Copy, Pencil, Plus, SlidersHorizontal, Trash2 } from 'lucide-react'
+import { Copy, Pencil, Plus, SlidersHorizontal, Trash2 } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
 import { api } from '../../api/cliente'
 import { Permisos } from '../../auth/permisos'
 import { useSesion } from '../../auth/SesionContexto'
-import { Aviso, Boton, Campo, Casilla, EstadoActivo, Modal, Selector, Tarjeta } from '../../ui/componentes'
+import { Aviso, Boton, Campo, Casilla, EstadoActivo, Modal, Paginador, Selector, Tarjeta } from '../../ui/componentes'
 import { aplanar, armarArbol, type Rubro } from '../rubros/arbol'
 import './productos.css'
 
@@ -302,22 +302,6 @@ function tituloEdicion(edicion: Edicion | null) {
   if (edicion?.modo === 'editar') return 'Editar producto'
   if (edicion?.modo === 'duplicar') return 'Duplicar producto'
   return 'Nuevo producto'
-}
-
-function Paginador({ pagina, paginas, cambiar }: { pagina: number; paginas: number; cambiar: (p: number) => void }) {
-  return (
-    <div className="paginador">
-      <Boton chico disabled={pagina <= 1} onClick={() => cambiar(pagina - 1)} aria-label="Página anterior">
-        <ChevronLeft size={16} />
-      </Boton>
-      <span>
-        Página {pagina} de {paginas}
-      </span>
-      <Boton chico disabled={pagina >= paginas} onClick={() => cambiar(pagina + 1)} aria-label="Página siguiente">
-        <ChevronRight size={16} />
-      </Boton>
-    </div>
-  )
 }
 
 /** Carga el producto si se está editando; al duplicar o crear ya viene el formulario armado. */

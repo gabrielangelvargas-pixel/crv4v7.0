@@ -57,6 +57,28 @@ public class ClienteConfiguracion : IEntityTypeConfiguration<Cliente>
         b.Property(x => x.Celular2).HasColumnName("NumCelular2");
         b.Property(x => x.TelefonoFijo).HasColumnName("NumFijo");
         b.Property(x => x.FechaAlta).HasDefaultValueSql("CURRENT_TIMESTAMP").ValueGeneratedOnAdd();
+        b.HasOne(x => x.Zona).WithMany().HasForeignKey(x => x.IdZona).OnDelete(DeleteBehavior.Restrict);
+        b.HasOne(x => x.CondicionFiscal).WithMany().HasForeignKey(x => x.IdFiscal).OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
+public class ZonaConfiguracion : IEntityTypeConfiguration<Zona>
+{
+    public void Configure(EntityTypeBuilder<Zona> b)
+    {
+        b.ToTable("zonas", t => t.ExcludeFromMigrations());
+        b.Property(x => x.Id).HasColumnName("IdZona").ValueGeneratedNever();
+        b.Property(x => x.Nombre).HasColumnName("NombreZona");
+    }
+}
+
+public class CondicionFiscalConfiguracion : IEntityTypeConfiguration<CondicionFiscal>
+{
+    public void Configure(EntityTypeBuilder<CondicionFiscal> b)
+    {
+        b.ToTable("fiscales", t => t.ExcludeFromMigrations());
+        b.Property(x => x.Id).HasColumnName("IdFiscal").ValueGeneratedNever();
+        b.Property(x => x.Nombre).HasColumnName("NombreFiscal");
     }
 }
 

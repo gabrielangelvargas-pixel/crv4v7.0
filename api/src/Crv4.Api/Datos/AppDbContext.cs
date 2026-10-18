@@ -23,6 +23,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Producto> Productos => Set<Producto>();
     public DbSet<Proveedor> Proveedores => Set<Proveedor>();
     public DbSet<Cliente> Clientes => Set<Cliente>();
+    public DbSet<Zona> Zonas => Set<Zona>();
+    public DbSet<CondicionFiscal> CondicionesFiscales => Set<CondicionFiscal>();
     public DbSet<Numerador> Numeradores => Set<Numerador>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
