@@ -5,9 +5,11 @@ namespace Crv4.Api.Datos;
 
 /// <summary>
 /// Hace que "migrar" funcione también en MariaDB (por ejemplo la base de Hostinger).
-/// Al migrar, el proveedor bloquea con GET_LOCK('__EFMigrationsLock',-1) (espera infinita): MySQL lo acepta,
-/// pero MariaDB devuelve NULL y la migración falla con "Unable to cast object of type 'System.DBNull' to type 'System.Int64'".
-/// Se cambia por una espera de una hora, que vale para los dos.
+/// Al migrar, el proveedor bloquea con GET_LOCK('__EFMigrationsLock',-1) y lee el resultado como BIGINT.
+/// En MariaDB eso falla de dos formas:
+///   - la espera -1 (infinita) devuelve NULL ("Unable to cast object of type 'System.DBNull' to type 'System.Int64'");
+///   - el resultado llega como INT ("... 'System.Int32' to type 'System.Int64'"), aunque se use CAST(... AS SIGNED).
+/// Se cambia por una espera de una hora y el resultado se entrega siempre como long. En MySQL no cambia nada.
 /// </summary>
 public sealed class BloqueoMigracionesCompatible : DbCommandInterceptor
 {
@@ -29,9 +31,21 @@ public sealed class BloqueoMigracionesCompatible : DbCommandInterceptor
         return ValueTask.FromResult(result);
     }
 
+    public override object? ScalarExecuted(DbCommand command, CommandExecutedEventData eventData, object? result) =>
+        ComoLong(command, result);
+
+    public override ValueTask<object?> ScalarExecutedAsync(
+        DbCommand command, CommandExecutedEventData eventData, object? result, CancellationToken cancellationToken = default) =>
+        ValueTask.FromResult(ComoLong(command, result));
+
     private static void Ajustar(DbCommand command)
     {
         if (command.CommandText.Contains(Original, StringComparison.Ordinal))
             command.CommandText = command.CommandText.Replace(Original, Compatible, StringComparison.Ordinal);
     }
+
+    private static object? ComoLong(DbCommand command, object? result) =>
+        command.CommandText.Contains("_LOCK('__EFMigrationsLock'", StringComparison.Ordinal) && result is not (null or DBNull)
+            ? Convert.ToInt64(result)
+            : result;
 }

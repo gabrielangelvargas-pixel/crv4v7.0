@@ -24,6 +24,7 @@ Confirmar-Administrador
 
 $exe = Join-Path $CarpetaApi 'Crv4.Api.exe'
 if (-not (Test-Path $exe)) { throw "No encuentro $exe. Instalá la API con INSTALAR.cmd." }
+Write-Host ("API instalada: {0:dd/MM/yyyy HH:mm}" -f (Get-Item (Join-Path $CarpetaApi 'Crv4.Api.dll')).LastWriteTime)
 
 Write-Host '--- Base remota ---'
 Write-Host 'El servidor figura en Hostinger, en Bases de datos > MySQL remoto (por ejemplo srv1234.hstgr.io).'

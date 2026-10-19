@@ -8,7 +8,7 @@
   Pide por consola:
     - la conexión a MySQL de la cuenta de la API (solo SELECT/INSERT/UPDATE/DELETE)
     - la contraseña del PFX creado con Crear-Certificado.ps1
-    - el dominio de Hostinger desde el que se abre la web (para CORS)
+    - las direcciones desde las que se abre la web (para CORS), separadas por coma
   La clave de firma de sesiones (JWT) se genera sola al azar. Volver a generarla cierra todas las sesiones.
   Se puede ejecutar de nuevo para cambiar cualquier dato.
 #>
@@ -48,9 +48,12 @@ catch { throw 'La contraseña del PFX no es correcta.' }
 icacls $pfx /grant "NT SERVICE\${NombreServicio}:R" | Out-Null
 
 Write-Host '--- Web ---'
-$origenActual = if ($actual) { @($actual.Cors.OrigenesPermitidos)[0] } else { $null }
-$origen = Leer-Valor 'Dirección de la web en Hostinger (con https://)' $(if ($origenActual) { $origenActual } else { 'https://white-eland-918813.hostingersite.com' })
-if ($origen -notmatch '^https://[^/]+$') { throw 'La dirección tiene que ser del tipo https://dominio.com, sin barra final.' }
+$origenesActuales = if ($actual) { @($actual.Cors.OrigenesPermitidos) -join ', ' } else { $null }
+$porDefecto = if ($origenesActuales) { $origenesActuales } else { 'https://white-eland-918813.hostingersite.com, https://desarrollos-gv.com.ar, https://www.desarrollos-gv.com.ar' }
+$origenes = @((Leer-Valor 'Direcciones de la web (con https://, separadas por coma)' $porDefecto) -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+foreach ($origen in $origenes) {
+    if ($origen -notmatch '^https://[^/]+$') { throw "La dirección $origen tiene que ser del tipo https://dominio.com, sin barra final." }
+}
 
 $claveJwt = if ($actual) { $actual.Jwt.Clave } else { $null }
 if ($RegenerarClaveSesiones -or -not $claveJwt) {
@@ -63,7 +66,7 @@ if ($RegenerarClaveSesiones -or -not $claveJwt) {
 $secretos = [ordered]@{
     ConnectionStrings = [ordered]@{ Principal = (Armar-CadenaMySql $servidor $puertoDb $base $usuario $claveDb) }
     Jwt               = [ordered]@{ Clave = $claveJwt }
-    Cors              = [ordered]@{ OrigenesPermitidos = @($origen) }
+    Cors              = [ordered]@{ OrigenesPermitidos = $origenes }
     Kestrel           = [ordered]@{
         Endpoints = [ordered]@{
             Https = [ordered]@{
