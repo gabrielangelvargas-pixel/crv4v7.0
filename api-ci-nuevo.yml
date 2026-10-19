@@ -1,0 +1,36 @@
+# Revisa tipos, lint y corre las pruebas de la API (incluidas las que usan MySQL) en cada cambio.
+name: API
+
+on:
+  push:
+    branches: [main]
+    paths: ['api/**', 'database/**', '.github/workflows/api.yml']
+  pull_request:
+    paths: ['api/**', 'database/**']
+
+jobs:
+  pruebas:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: solo-para-ci
+        ports: ['3306:3306']
+        options: --health-cmd="mysqladmin ping -psolo-para-ci" --health-interval=5s --health-retries=20
+    env:
+      CRV4_TEST_MYSQL: mysql://root:solo-para-ci@127.0.0.1:3306/crv4_test
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: api/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test

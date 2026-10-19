@@ -4,43 +4,48 @@ Sistema de gestión interna de CRV4 Mayorista: productos, clientes, ventas, esta
 
 | Parte | Qué es | Dónde corre |
 |---|---|---|
-| `api/` | API ASP.NET Core (.NET 10) + EF Core + MySQL | PC servidor de la red local, como servicio de Windows con HTTPS |
-| `web/` | React 19 + Vite, instalable como PWA | Hostinger (se publica sola desde Git) |
-| `deploy/` | Scripts de instalación del servidor | PC servidor |
+| `api/` | API Node.js (TypeScript + Express) + MySQL/MariaDB | Hostinger, app Node.js en `https://api.desarrollos-gv.com.ar` |
+| `web/` | React 19 + Vite, instalable como PWA | Hostinger, `https://desarrollos-gv.com.ar` (se publica sola desde Git) |
+| `database/` | Estructura de la base de Sistema03, para las pruebas | — |
 | `docs/` | Documentación | — |
 
 ```
-Navegador (cualquier PC)                          PC servidor (red local)
-┌──────────────────────────┐   HTTPS + CORS    ┌────────────────────────┐
-│ Web PWA desde Hostinger  │ ───────────────▶  │ CRV4Api (servicio)     │
-│ https://<dominio>        │  config.json dice │ https://192.168.100.128│
-└──────────────────────────┘  a dónde llamar   │ :5443  ──▶  MySQL      │
-                                               └────────────────────────┘
+Celular o PC (cualquier red)                 Hostinger
+┌──────────────────────────┐  HTTPS + CORS  ┌──────────────────────────────┐
+│ Web PWA                  │ ─────────────▶ │ API Node.js                  │
+│ desarrollos-gv.com.ar    │                │ api.desarrollos-gv.com.ar    │
+└──────────────────────────┘                │        │                     │
+                                            │        ▼                     │
+                                            │ Base MariaDB (crv4_datos)    │
+                                            └──────────────────────────────┘
 ```
 
 ## Estado
 
-| Módulo | API | Web |
+La API se está pasando de .NET a Node.js por etapas. La versión .NET quedó guardada en Git con la etiqueta `version-dotnet`.
+
+| Etapa | Qué incluye | API Node.js |
 |---|---|---|
-| Login, sesiones, cambio de contraseña | ✅ | ✅ |
-| Seguridad (usuarios, roles, permisos) | ✅ | ✅ |
-| Rubros | ✅ | ✅ |
-| Inicio (tarjetas) | ✅ parcial | ✅ |
-| Productos, Clientes, Ventas, Estadísticas, Control Ventas | pendiente (tablas de `crv4_datos` ya mapeadas: productos y clientes) | pantalla "en construcción" |
+| 1 | Base del proyecto, migraciones y `/api/salud` | ✅ |
+| 2 | Login, sesiones y Seguridad | pendiente |
+| 3 | Rubros, Productos e Inicio | pendiente |
+| 4 | Clientes | pendiente |
+| 5 | Ventas y Pagos | pendiente |
+| 6 | La web usa un solo servidor | pendiente |
+
+Las pantallas de la web ya están hechas para todos esos módulos (salvo WooCommerce, Estadísticas y Control Ventas).
 
 ## Documentación
 
-- [Arquitectura y decisiones](docs/arquitectura.md): por qué está armado así (y qué se corrigió respecto de Sistema03).
+- [Arquitectura y decisiones](docs/arquitectura.md)
 - [Desarrollo](docs/desarrollo.md): cómo correr todo en tu PC.
 - [Base de datos y migraciones](docs/base-de-datos.md)
-- [Instalación del servidor](docs/servidor.md)
-- [Publicación de la web en Hostinger](docs/hostinger.md)
+- [Publicación en Hostinger](docs/hostinger.md): la web y la API.
 
 ## Reglas del proyecto
 
-1. **Ninguna clave en el repositorio.** Ni en `appsettings.json`, ni en scripts, ni en archivos `.http`.
-2. **La estructura de la base solo cambia con migraciones** (`dotnet ef migrations add ...`), aplicadas a mano con `Aplicar-Migraciones.ps1`. La API nunca la cambia al arrancar.
+1. **Ninguna clave en el repositorio.** Van en las variables de entorno de Hostinger o en `api/.env.local` (no se sube).
+2. **La estructura de la base solo cambia con migraciones** (`api/migraciones/*.sql`), aplicadas a mano con `npm run migrar`. La API nunca la cambia al arrancar.
 3. **Los números de venta y de cliente los da la base** (`numeradores`), nunca `MAX(id)+1`.
-4. **Un módulo, una carpeta**, tanto en la API (`Modulos/<Modulo>`) como en la web (`src/modulos/<modulo>`).
-5. Cada permiso nuevo se agrega en `Permisos.cs` y en `web/src/auth/permisos.ts`, con una migración que lo inserte (`INSERT IGNORE`).
-6. La base es `crv4_datos`, compartida con Sistema03: las migraciones solo agregan (ver `docs/base-de-datos.md`).
+4. **Un módulo, una carpeta**, tanto en la API (`src/modulos/<modulo>`) como en la web (`src/modulos/<modulo>`).
+5. La base es `crv4_datos`, compartida con Sistema03: las migraciones solo agregan (ver `docs/base-de-datos.md`).

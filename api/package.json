@@ -1,0 +1,35 @@
+{
+  "name": "crv4-api",
+  "version": "7.0.0",
+  "private": true,
+  "type": "module",
+  "description": "API de CRV4 Mayorista 7.0",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "dev": "node --watch --env-file-if-exists=.env.local src/servidor.ts",
+    "start": "node src/servidor.ts",
+    "migrar": "node --env-file-if-exists=.env.local src/migrar.ts",
+    "test": "vitest run",
+    "typecheck": "tsc",
+    "lint": "oxlint"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.3.0",
+    "helmet": "^8.3.0",
+    "mysql2": "^3.24.6",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.20.5",
+    "@types/supertest": "^7.2.1",
+    "oxlint": "^1.88.0",
+    "supertest": "^7.3.1",
+    "typescript": "~6.0.2",
+    "vitest": "^5.0.5"
+  }
+}
